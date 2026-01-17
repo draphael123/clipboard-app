@@ -16,12 +16,12 @@
       --bg-elevated: #f0f2f8;
       --text-bright: #0a0a12;
       --text-primary: #1a1a2e;
-      --text-secondary: #5a5a7a;
-      --text-muted: #8a8aa8;
-      --accent: #6c4cff;
-      --accent-light: #8b6cff;
-      --accent-glow: rgba(108, 76, 255, 0.25);
-      --success: #10b981;
+      --text-secondary: #3d3d5c;
+      --text-muted: #5a5a78;
+      --accent: #5b3fd4;
+      --accent-light: #7c5cff;
+      --accent-glow: rgba(91, 63, 212, 0.25);
+      --success: #059669;
       --border: rgba(0, 0, 0, 0.08);
       --font-display: 'Syne', sans-serif;
       --font-serif: 'Instrument Serif', serif;
@@ -165,7 +165,7 @@
     .nav-links a {
       color: var(--text-secondary);
       text-decoration: none;
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 500;
       transition: color 0.2s ease;
     }
@@ -178,10 +178,10 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 12px 24px;
+      padding: 14px 26px;
       border-radius: 12px;
       font-family: var(--font-display);
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 600;
       text-decoration: none;
       transition: all 0.2s ease;
@@ -236,12 +236,12 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 16px;
+      padding: 10px 18px;
       background: var(--bg-elevated);
       border: 1px solid var(--border);
       border-radius: 100px;
-      font-size: 12px;
-      font-weight: 500;
+      font-size: 13px;
+      font-weight: 600;
       color: var(--text-secondary);
       margin-bottom: 24px;
     }
@@ -282,10 +282,12 @@
     }
 
     .hero-description {
-      font-size: 18px;
+      font-size: 19px;
+      line-height: 1.7;
       color: var(--text-secondary);
       margin-bottom: 40px;
-      max-width: 440px;
+      max-width: 480px;
+      font-weight: 450;
     }
 
     .hero-cta {
@@ -475,8 +477,10 @@
     }
 
     .section-header p {
-      font-size: 16px;
+      font-size: 18px;
+      line-height: 1.6;
       color: var(--text-secondary);
+      font-weight: 450;
     }
 
     .features-grid {
@@ -500,28 +504,30 @@
     }
 
     .feature-icon {
-      width: 48px;
-      height: 48px;
+      width: 52px;
+      height: 52px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, var(--accent) 0%, rgba(139, 108, 255, 0.3) 100%);
-      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      border-radius: 14px;
       margin-bottom: 20px;
       color: white;
+      box-shadow: 0 8px 20px -8px rgba(91, 63, 212, 0.4);
     }
 
     .feature-card h3 {
-      font-size: 18px;
+      font-size: 19px;
       font-weight: 600;
       color: var(--text-bright);
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     .feature-card p {
-      font-size: 14px;
+      font-size: 15px;
       color: var(--text-secondary);
-      line-height: 1.6;
+      line-height: 1.7;
+      font-weight: 450;
     }
 
     /* How it works */
@@ -574,15 +580,17 @@
     }
 
     .step h3 {
-      font-size: 18px;
+      font-size: 19px;
       font-weight: 600;
       color: var(--text-bright);
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     .step p {
-      font-size: 14px;
+      font-size: 15px;
       color: var(--text-secondary);
+      line-height: 1.6;
+      font-weight: 450;
     }
 
     /* CTA Section */
@@ -619,9 +627,11 @@
     }
 
     .cta-box p {
-      font-size: 16px;
+      font-size: 17px;
+      line-height: 1.6;
       color: var(--text-secondary);
       margin-bottom: 32px;
+      font-weight: 450;
     }
 
     .cta-buttons {
@@ -649,8 +659,9 @@
     }
 
     .footer-text {
-      font-size: 13px;
+      font-size: 14px;
       color: var(--text-muted);
+      font-weight: 450;
     }
 
     .footer-links {
@@ -659,10 +670,11 @@
     }
 
     .footer-links a {
-      font-size: 13px;
+      font-size: 14px;
       color: var(--text-secondary);
       text-decoration: none;
       transition: color 0.2s ease;
+      font-weight: 500;
     }
 
     .footer-links a:hover {
