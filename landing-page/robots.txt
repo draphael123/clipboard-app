@@ -1,0 +1,7 @@
+# ClipStash robots.txt
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://landing-page-five-psi.vercel.app/sitemap.xml
+

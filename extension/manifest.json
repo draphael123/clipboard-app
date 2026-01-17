@@ -1,12 +1,15 @@
 {
   "manifest_version": 3,
   "name": "ClipStash",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Your clipboard history, always within reach. Never lose copied text again.",
   "permissions": [
     "storage",
     "clipboardRead",
-    "activeTab"
+    "clipboardWrite",
+    "activeTab",
+    "contextMenus",
+    "notifications"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -27,13 +30,44 @@
       "32": "icons/icon32.png",
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
-    }
+    },
+    "default_title": "ClipStash (Ctrl+Shift+V)"
   },
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  }
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+V",
+        "mac": "Command+Shift+V"
+      },
+      "description": "Open ClipStash"
+    },
+    "copy-recent-1": {
+      "suggested_key": {
+        "default": "Alt+1"
+      },
+      "description": "Copy most recent clip"
+    },
+    "copy-recent-2": {
+      "suggested_key": {
+        "default": "Alt+2"
+      },
+      "description": "Copy second most recent clip"
+    },
+    "copy-recent-3": {
+      "suggested_key": {
+        "default": "Alt+3"
+      },
+      "description": "Copy third most recent clip"
+    }
+  },
+  "omnibox": {
+    "keyword": "clip"
+  },
+  "options_page": "settings.html"
 }
-

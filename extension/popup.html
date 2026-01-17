@@ -17,13 +17,24 @@
         <span>ClipStash</span>
       </div>
       <div class="header-actions">
-        <button id="searchToggle" class="icon-btn" title="Search">
+        <button id="searchToggle" class="icon-btn" title="Search (/)">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/>
             <path d="M21 21l-4.35-4.35"/>
           </svg>
         </button>
-        <button id="clearAll" class="icon-btn" title="Clear all">
+        <button id="filterToggle" class="icon-btn" title="Filters">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+          </svg>
+        </button>
+        <button id="settingsBtn" class="icon-btn" title="Settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+          </svg>
+        </button>
+        <button id="clearAll" class="icon-btn danger" title="Clear all">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/>
           </svg>
@@ -32,7 +43,27 @@
     </header>
 
     <div class="search-bar" id="searchBar">
-      <input type="text" id="searchInput" placeholder="Search clips..." autocomplete="off">
+      <input type="text" id="searchInput" placeholder="Search clips... (press / to focus)" autocomplete="off">
+    </div>
+
+    <div class="filter-bar" id="filterBar">
+      <select id="typeFilter">
+        <option value="all">All types</option>
+        <option value="text">Text</option>
+        <option value="url">URLs</option>
+        <option value="code">Code</option>
+        <option value="email">Email</option>
+        <option value="phone">Phone</option>
+      </select>
+      <select id="categoryFilter">
+        <option value="">All categories</option>
+      </select>
+      <select id="dateFilter">
+        <option value="all">All time</option>
+        <option value="today">Today</option>
+        <option value="week">This week</option>
+        <option value="month">This month</option>
+      </select>
     </div>
 
     <div class="tabs">
@@ -54,12 +85,25 @@
 
     <footer class="footer">
       <span id="clipCount">0 clips</span>
+      <span class="shortcut-hint">Ctrl+Shift+V to open</span>
     </footer>
   </div>
 
   <div class="toast" id="toast">Copied to clipboard!</div>
 
+  <!-- Category Modal -->
+  <div class="modal" id="categoryModal">
+    <div class="modal-content">
+      <h3>Set Category</h3>
+      <input type="text" id="categoryInput" placeholder="Enter category name" list="categoryList">
+      <datalist id="categoryList"></datalist>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="cancelCategory">Cancel</button>
+        <button class="btn-primary" id="saveCategory">Save</button>
+      </div>
+    </div>
+  </div>
+
   <script src="popup.js"></script>
 </body>
 </html>
-

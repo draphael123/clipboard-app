@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Changelog - ClipStash</title>
+  <meta name="description" content="ClipStash version history and release notes.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fafbff;
+      --bg-card: #ffffff;
+      --text: #1a1a2e;
+      --text-secondary: #3d3d5c;
+      --text-muted: #6a6a88;
+      --accent: #5b3fd4;
+      --success: #059669;
+      --border: rgba(0, 0, 0, 0.08);
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f0f14;
+        --bg-card: #17171c;
+        --text: #f0f0f5;
+        --text-secondary: #a0a0b8;
+        --text-muted: #6a6a80;
+        --border: rgba(255, 255, 255, 0.08);
+      }
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+    
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 60px 24px;
+    }
+    
+    header {
+      margin-bottom: 48px;
+    }
+    
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 24px;
+    }
+    
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    
+    h1 {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+    
+    .release {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+    
+    .release-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .version {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    
+    .version-badge {
+      padding: 4px 12px;
+      background: rgba(5, 150, 105, 0.1);
+      color: var(--success);
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .release-date {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-left: auto;
+    }
+    
+    .changes-section {
+      margin-bottom: 20px;
+    }
+    
+    .changes-section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .changes-section h3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    
+    .changes-section h3.new { color: #059669; }
+    .changes-section h3.improved { color: #2563eb; }
+    .changes-section h3.fixed { color: #dc2626; }
+    
+    .changes-section ul {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .changes-section li {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 8px;
+      color: var(--text-secondary);
+    }
+    
+    .changes-section li::before {
+      content: '→';
+      position: absolute;
+      left: 0;
+      color: var(--text-muted);
+    }
+    
+    code {
+      background: var(--bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 13px;
+    }
+    
+    footer {
+      margin-top: 48px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    
+    footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Back to ClipStash
+      </a>
+      <h1>Changelog</h1>
+      <p class="subtitle">All notable changes to ClipStash</p>
+    </header>
+    
+    <div class="release">
+      <div class="release-header">
+        <span class="version">v1.1.0</span>
+        <span class="version-badge">Latest</span>
+        <span class="release-date">January 17, 2026</span>
+      </div>
+      
+      <div class="changes-section">
+        <h3 class="new">✨ New Features</h3>
+        <ul>
+          <li>Keyboard shortcuts: <code>Ctrl+Shift+V</code> to open, <code>Alt+1/2/3</code> for quick copy</li>
+          <li>Settings page with customizable options</li>
+          <li>Context menu integration (right-click to save/paste)</li>
+          <li>Omnibox support: type <code>clip</code> in address bar to search</li>
+          <li>Categories/tags for organizing clips</li>
+          <li>Export and import clipboard history as JSON</li>
+          <li>Syntax highlighting for code snippets</li>
+          <li>Expand/collapse long clips</li>
+          <li>Sensitive content detection (API keys, passwords)</li>
+          <li>Advanced filters: by type, category, and date range</li>
+          <li>Keyboard navigation in popup (↑/↓ arrows, Enter to copy)</li>
+          <li>Badge counter showing total clips</li>
+          <li>Storage usage monitoring with quota warnings</li>
+          <li>Usage statistics tracking</li>
+        </ul>
+      </div>
+      
+      <div class="changes-section">
+        <h3 class="improved">🔧 Improvements</h3>
+        <ul>
+          <li>Better duplicate detection (checks all history, not just most recent)</li>
+          <li>Duplicates now update timestamp and move to top</li>
+          <li>Configurable max history size (50-500 clips)</li>
+          <li>Optional auto-delete for old clips</li>
+          <li>Excluded websites feature</li>
+          <li>Copy count tracking per clip</li>
+          <li>Notifications can be disabled in settings</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="release">
+      <div class="release-header">
+        <span class="version">v1.0.0</span>
+        <span class="release-date">January 15, 2026</span>
+      </div>
+      
+      <div class="changes-section">
+        <h3 class="new">✨ Initial Release</h3>
+        <ul>
+          <li>Automatic clipboard history capture</li>
+          <li>Store up to 100 clips locally</li>
+          <li>Pin important clips</li>
+          <li>Instant search across all clips</li>
+          <li>Smart content type detection (URL, code, email, phone)</li>
+          <li>One-click copy from history</li>
+          <li>Source tracking (which website clip came from)</li>
+          <li>Dark theme UI</li>
+          <li>100% private - all data stored locally</li>
+        </ul>
+      </div>
+    </div>
+    
+    <footer>
+      <p>© 2026 ClipStash • <a href="/">Home</a> • <a href="/privacy.html">Privacy</a></p>
+    </footer>
+  </div>
+</body>
+</html>
+

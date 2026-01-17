@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClipStash Settings</title>
+  <link rel="stylesheet" href="settings.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="2" width="12" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+          <rect x="8" y="6" width="12" height="16" rx="2" fill="currentColor" opacity="0.3" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        <h1>ClipStash Settings</h1>
+      </div>
+      <p class="subtitle">Customize your clipboard manager</p>
+    </header>
+
+    <main>
+      <!-- Storage Section -->
+      <section class="settings-section">
+        <h2>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+          </svg>
+          Storage
+        </h2>
+        
+        <div class="setting-item">
+          <div class="setting-info">
+            <label for="maxHistory">Maximum History Size</label>
+            <span class="setting-desc">Number of clips to keep (pinned items don't count)</span>
+          </div>
+          <select id="maxHistory">
+            <option value="50">50 clips</option>
+            <option value="100">100 clips</option>
+            <option value="200">200 clips</option>
+            <option value="500">500 clips</option>
+          </select>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <label for="autoDelete">Auto-delete Old Clips</label>
+            <span class="setting-desc">Automatically remove clips older than this</span>
+          </div>
+          <select id="autoDelete">
+            <option value="0">Never</option>
+            <option value="7">After 7 days</option>
+            <option value="30">After 30 days</option>
+            <option value="90">After 90 days</option>
+          </select>
+        </div>
+
+        <div class="storage-usage">
+          <div class="usage-header">
+            <span>Storage Used</span>
+            <span id="storagePercent">0%</span>
+          </div>
+          <div class="usage-bar">
+            <div class="usage-fill" id="storageFill"></div>
+          </div>
+          <span class="usage-text" id="storageText">0 KB of 5 MB</span>
+        </div>
+      </section>
+
+      <!-- Privacy Section -->
+      <section class="settings-section">
+        <h2>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          Privacy & Security
+        </h2>
+
+        <div class="setting-item toggle">
+          <div class="setting-info">
+            <label for="detectSensitive">Detect Sensitive Content</label>
+            <span class="setting-desc">Warn when saving API keys, passwords, etc.</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="detectSensitive">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <label for="excludedSites">Excluded Websites</label>
+            <span class="setting-desc">Clips from these sites won't be saved (one per line)</span>
+          </div>
+          <textarea id="excludedSites" placeholder="bank.example.com&#10;secrets.example.com"></textarea>
+        </div>
+      </section>
+
+      <!-- Notifications Section -->
+      <section class="settings-section">
+        <h2>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+          </svg>
+          Notifications
+        </h2>
+
+        <div class="setting-item toggle">
+          <div class="setting-info">
+            <label for="showNotifications">Show Notifications</label>
+            <span class="setting-desc">Display notifications for saves, copies, and warnings</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="showNotifications">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Appearance Section -->
+      <section class="settings-section">
+        <h2>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+          Appearance
+        </h2>
+
+        <div class="setting-item">
+          <div class="setting-info">
+            <label for="theme">Theme</label>
+            <span class="setting-desc">Choose your preferred color scheme</span>
+          </div>
+          <select id="theme">
+            <option value="system">System default</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
+      </section>
+
+      <!-- Data Section -->
+      <section class="settings-section">
+        <h2>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+          </svg>
+          Data Management
+        </h2>
+
+        <div class="button-group">
+          <button id="exportBtn" class="btn btn-secondary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+            Export Data
+          </button>
+          <button id="importBtn" class="btn btn-secondary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+            </svg>
+            Import Data
+          </button>
+          <input type="file" id="importFile" accept=".json" hidden>
+        </div>
+
+        <div class="danger-zone">
+          <h3>Danger Zone</h3>
+          <button id="clearAllBtn" class="btn btn-danger">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/>
+            </svg>
+            Clear All History
+          </button>
+        </div>
+      </section>
+
+      <!-- Stats Section -->
+      <section class="settings-section">
+        <h2>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 20V10M12 20V4M6 20v-6"/>
+          </svg>
+          Statistics
+        </h2>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <span class="stat-value" id="totalSaved">0</span>
+            <span class="stat-label">Total Clips Saved</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value" id="totalCopied">0</span>
+            <span class="stat-label">Copies from History</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-value" id="currentClips">0</span>
+            <span class="stat-label">Current Clips</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Keyboard Shortcuts -->
+      <section class="settings-section">
+        <h2>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M6 12h.01M18 12h.01M8 16h8"/>
+          </svg>
+          Keyboard Shortcuts
+        </h2>
+
+        <div class="shortcuts-list">
+          <div class="shortcut-item">
+            <span class="shortcut-keys"><kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>V</kbd></span>
+            <span class="shortcut-desc">Open ClipStash</span>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-keys"><kbd>Alt</kbd> + <kbd>1</kbd></span>
+            <span class="shortcut-desc">Copy most recent clip</span>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-keys"><kbd>Alt</kbd> + <kbd>2</kbd></span>
+            <span class="shortcut-desc">Copy 2nd most recent</span>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-keys"><kbd>Alt</kbd> + <kbd>3</kbd></span>
+            <span class="shortcut-desc">Copy 3rd most recent</span>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-keys"><kbd>↑</kbd> / <kbd>↓</kbd></span>
+            <span class="shortcut-desc">Navigate clips (in popup)</span>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-keys"><kbd>Enter</kbd></span>
+            <span class="shortcut-desc">Copy selected clip</span>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-keys"><kbd>/</kbd></span>
+            <span class="shortcut-desc">Focus search</span>
+          </div>
+        </div>
+
+        <p class="shortcuts-note">
+          Type <code>clip</code> in the address bar and press Tab to search clips directly.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      <p>ClipStash v1.1.0 • <a href="https://github.com/draphael123/clipboard-app" target="_blank">GitHub</a></p>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast">Settings saved!</div>
+
+  <script src="settings.js"></script>
+</body>
+</html>
+
