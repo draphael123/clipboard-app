@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClipStash</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="4" y="2" width="12" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+          <rect x="8" y="6" width="12" height="16" rx="2" fill="currentColor" opacity="0.3" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        <span>ClipStash</span>
+      </div>
+      <div class="header-actions">
+        <button id="searchToggle" class="icon-btn" title="Search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.35-4.35"/>
+          </svg>
+        </button>
+        <button id="clearAll" class="icon-btn" title="Clear all">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="search-bar" id="searchBar">
+      <input type="text" id="searchInput" placeholder="Search clips..." autocomplete="off">
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="all">All</button>
+      <button class="tab" data-tab="pinned">Pinned</button>
+    </div>
+
+    <main class="clips-container" id="clipsContainer">
+      <div class="empty-state" id="emptyState">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
+          <rect x="4" y="2" width="12" height="16" rx="2"/>
+          <rect x="8" y="6" width="12" height="16" rx="2"/>
+        </svg>
+        <p>No clips yet</p>
+        <span>Copy something to get started</span>
+      </div>
+      <div class="clips-list" id="clipsList"></div>
+    </main>
+
+    <footer class="footer">
+      <span id="clipCount">0 clips</span>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast">Copied to clipboard!</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
+
