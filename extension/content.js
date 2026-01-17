@@ -3,21 +3,45 @@
 
 console.log('ClipStash: Content script loaded on', window.location.hostname);
 
-// Listen for copy events
-document.addEventListener('copy', handleCopy);
+// Listen for copy events with capture phase to catch before other handlers
+document.addEventListener('copy', handleCopy, true);
+window.addEventListener('copy', handleCopy, true);
+
+// Also listen for keyboard shortcut as backup
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+    console.log('ClipStash: Ctrl+C detected');
+    // Give time for clipboard to update
+    setTimeout(captureFromSelection, 100);
+  }
+}, true);
 
 function handleCopy(event) {
   console.log('ClipStash: Copy event detected');
   
-  // Get selected text
+  // Try to get from event's clipboardData first
+  if (event.clipboardData) {
+    const text = event.clipboardData.getData('text/plain');
+    if (text && text.trim()) {
+      console.log('ClipStash: Got from clipboardData, length:', text.length);
+      sendToBackground(text.trim());
+      return;
+    }
+  }
+  
+  // Fallback to selection
+  captureFromSelection();
+}
+
+function captureFromSelection() {
   const selection = window.getSelection();
   const selectedText = selection ? selection.toString().trim() : '';
   
   if (selectedText) {
-    console.log('ClipStash: Got selection, length:', selectedText.length);
+    console.log('ClipStash: Got from selection, length:', selectedText.length);
     sendToBackground(selectedText);
   } else {
-    console.log('ClipStash: No selection found');
+    console.log('ClipStash: No text found in selection');
   }
 }
 
@@ -42,14 +66,18 @@ function sendToBackground(content) {
     }
   };
   
-  console.log('ClipStash: Sending to background', message.data.type);
+  console.log('ClipStash: Sending to background -', message.data.type, '- length:', content.length);
   
   chrome.runtime.sendMessage(message)
     .then(response => {
-      console.log('ClipStash: Background response', response);
+      if (response && response.success) {
+        console.log('ClipStash: Saved successfully!');
+      } else {
+        console.log('ClipStash: Save response:', response);
+      }
     })
     .catch(error => {
-      console.log('ClipStash: Error sending message', error);
+      console.error('ClipStash: Error sending message:', error);
     });
 }
 
@@ -57,7 +85,7 @@ function detectContentType(content) {
   if (/^https?:\/\/[^\s]+$/i.test(content)) return 'url';
   if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(content)) return 'email';
   if (/^(function|const|let|var|import|export|class|if|for|while)\s/m.test(content) ||
-      /[{}\[\]();]/.test(content) && content.includes('\n')) return 'code';
+      (/[{}\[\]();]/.test(content) && content.includes('\n'))) return 'code';
   if (/^[\d\s\-\+\(\)\.]+$/.test(content) && content.replace(/\D/g, '').length >= 7) return 'phone';
   return 'text';
 }
