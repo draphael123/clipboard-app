@@ -4,11 +4,38 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ClipStash - Your Clipboard History, Always Within Reach</title>
-  <meta name="description" content="Never lose copied text again. ClipStash is a beautiful Chrome extension that saves everything you copy.">
+  <meta name="description" content="Never lose copied text again. ClipStash is a beautiful Chrome extension that saves everything you copy. Free, private, and open source.">
+  
+  <!-- SEO Meta Tags -->
+  <meta name="keywords" content="clipboard manager, clipboard history, chrome extension, copy paste, productivity tool">
+  <meta name="author" content="ClipStash">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://clipstash.app">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://clipstash.app">
+  <meta property="og:title" content="ClipStash - Your Clipboard History, Always Within Reach">
+  <meta property="og:description" content="Never lose copied text again. ClipStash is a beautiful Chrome extension that saves everything you copy.">
+  <meta property="og:image" content="https://clipstash.app/og-image.png">
+  <meta property="og:site_name" content="ClipStash">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://clipstash.app">
+  <meta name="twitter:title" content="ClipStash - Your Clipboard History, Always Within Reach">
+  <meta name="twitter:description" content="Never lose copied text again. ClipStash is a beautiful Chrome extension that saves everything you copy.">
+  <meta name="twitter:image" content="https://clipstash.app/og-image.png">
+  
+  <!-- Favicon -->
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="favicon.svg">
+  
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
   <style>
     :root {
       --bg-dark: #fafbff;
@@ -27,6 +54,17 @@
       --font-serif: 'Instrument Serif', serif;
     }
 
+    [data-theme="dark"] {
+      --bg-dark: #08080c;
+      --bg-card: #0f0f14;
+      --bg-elevated: #16161d;
+      --text-bright: #fafaff;
+      --text-primary: #e0e0ea;
+      --text-secondary: #a0a0b8;
+      --text-muted: #6a6a80;
+      --border: rgba(255, 255, 255, 0.08);
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -43,6 +81,37 @@
       color: var(--text-primary);
       line-height: 1.6;
       overflow-x: hidden;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    /* Skip to content - Accessibility */
+    .skip-link {
+      position: absolute;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 24px;
+      background: var(--accent);
+      color: white;
+      border-radius: 8px;
+      z-index: 9999;
+      transition: top 0.3s ease;
+    }
+
+    .skip-link:focus {
+      top: 10px;
+    }
+
+    /* Scroll Progress Bar */
+    .scroll-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light), var(--success));
+      width: 0%;
+      z-index: 9999;
+      transition: width 0.1s ease-out;
     }
 
     /* Noise texture overlay */
@@ -129,10 +198,14 @@
     }
 
     nav.scrolled {
-      background: rgba(255, 255, 255, 0.9);
+      background: var(--bg-card);
       backdrop-filter: blur(20px);
       border-bottom: 1px solid var(--border);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    }
+
+    [data-theme="dark"] nav.scrolled {
+      background: rgba(15, 15, 20, 0.9);
     }
 
     nav .container {
@@ -162,7 +235,7 @@
       gap: 32px;
     }
 
-    .nav-links a {
+    .nav-links a:not(.btn) {
       color: var(--text-secondary);
       text-decoration: none;
       font-size: 15px;
@@ -170,8 +243,96 @@
       transition: color 0.2s ease;
     }
 
-    .nav-links a:hover {
+    .nav-links a:not(.btn):hover {
       color: var(--text-bright);
+    }
+
+    /* Theme Toggle */
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.2s ease;
+    }
+
+    .theme-toggle:hover {
+      color: var(--text-bright);
+      border-color: var(--accent);
+    }
+
+    .theme-toggle .sun { display: block; }
+    .theme-toggle .moon { display: none; }
+    [data-theme="dark"] .theme-toggle .sun { display: none; }
+    [data-theme="dark"] .theme-toggle .moon { display: block; }
+
+    /* Mobile Menu */
+    .mobile-menu-btn {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      padding: 8px;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .mobile-menu-btn span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--text-bright);
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+
+    .mobile-menu-btn.active span:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    .mobile-menu-btn.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .mobile-menu-btn.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(5px, -5px);
+    }
+
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 72px;
+      left: 0;
+      right: 0;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 24px;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 99;
+    }
+
+    .mobile-menu.active {
+      display: flex;
+    }
+
+    .mobile-menu a {
+      color: var(--text-primary);
+      text-decoration: none;
+      font-size: 16px;
+      font-weight: 500;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .mobile-menu a:last-child {
+      border-bottom: none;
     }
 
     .btn {
@@ -210,6 +371,11 @@
     .btn-ghost:hover {
       background: var(--bg-elevated);
       border-color: rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-sm {
+      padding: 10px 18px;
+      font-size: 14px;
     }
 
     /* Hero Section */
@@ -281,6 +447,18 @@
       background-clip: text;
     }
 
+    /* Typewriter animation */
+    .typewriter {
+      display: inline-block;
+      overflow: hidden;
+      animation: typewriter 1s steps(20) 0.5s forwards;
+      width: 0;
+    }
+
+    @keyframes typewriter {
+      to { width: 100%; }
+    }
+
     .hero-description {
       font-size: 19px;
       line-height: 1.7;
@@ -330,6 +508,10 @@
       border-bottom: 1px solid var(--border);
     }
 
+    [data-theme="dark"] .browser-header {
+      background: #1a1a22;
+    }
+
     .browser-dots {
       display: flex;
       gap: 6px;
@@ -350,6 +532,10 @@
       padding: 20px;
       min-height: 400px;
       background: #e8eaf0;
+    }
+
+    [data-theme="dark"] .browser-content {
+      background: #0a0a0e;
     }
 
     /* Extension preview */
@@ -414,17 +600,23 @@
       background: #16161d;
       border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 10px;
-      animation: clipSlide 0.4s ease;
+      opacity: 0;
+      transform: translateY(-8px);
+      animation: clipSlide 0.4s ease forwards;
     }
 
-    .ext-clip:nth-child(2) { animation-delay: 0.1s; }
-    .ext-clip:nth-child(3) { animation-delay: 0.2s; }
+    .ext-clip:nth-child(1) { animation-delay: 0.3s; }
+    .ext-clip:nth-child(2) { animation-delay: 0.5s; }
+    .ext-clip:nth-child(3) { animation-delay: 0.7s; }
 
     @keyframes clipSlide {
-      from { opacity: 0; transform: translateY(-8px); }
-      to { opacity: 1; transform: translateY(0); }
+      to { 
+        opacity: 1; 
+        transform: translateY(0); 
+      }
     }
 
+    /* Clip typing animation */
     .ext-clip-text {
       font-size: 12px;
       color: #e0e0ea;
@@ -457,9 +649,105 @@
       color: #6a6a80;
     }
 
+    /* Browser Logos Section */
+    .browsers {
+      padding: 60px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .browsers-content {
+      text-align: center;
+    }
+
+    .browsers-content p {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      font-weight: 500;
+    }
+
+    .browser-logos {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+
+    .browser-logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      opacity: 0.6;
+      transition: opacity 0.2s ease;
+    }
+
+    .browser-logo:hover {
+      opacity: 1;
+    }
+
+    .browser-logo svg {
+      width: 48px;
+      height: 48px;
+    }
+
+    .browser-logo span {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Use Cases Section */
+    .use-cases {
+      padding: 120px 0;
+    }
+
+    .use-cases-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 60px;
+    }
+
+    .use-case-card {
+      padding: 32px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .use-case-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.1);
+    }
+
+    .use-case-emoji {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .use-case-card h3 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-bright);
+      margin-bottom: 8px;
+    }
+
+    .use-case-card p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
     /* Features Section */
     .features {
       padding: 120px 0;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
     }
 
     .section-header {
@@ -491,7 +779,7 @@
 
     .feature-card {
       padding: 32px;
-      background: var(--bg-card);
+      background: var(--bg-dark);
       border: 1px solid var(--border);
       border-radius: 20px;
       transition: all 0.3s ease;
@@ -501,6 +789,10 @@
       border-color: rgba(108, 76, 255, 0.2);
       transform: translateY(-4px);
       box-shadow: 0 20px 40px -20px rgba(108, 76, 255, 0.15);
+    }
+
+    .feature-card:hover .feature-icon {
+      transform: scale(1.1) rotate(5deg);
     }
 
     .feature-icon {
@@ -514,6 +806,7 @@
       margin-bottom: 20px;
       color: white;
       box-shadow: 0 8px 20px -8px rgba(91, 63, 212, 0.4);
+      transition: transform 0.3s ease;
     }
 
     .feature-card h3 {
@@ -528,6 +821,74 @@
       color: var(--text-secondary);
       line-height: 1.7;
       font-weight: 450;
+    }
+
+    /* Comparison Section */
+    .comparison {
+      padding: 120px 0;
+    }
+
+    .comparison-table {
+      max-width: 800px;
+      margin: 60px auto 0;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+
+    .comparison-header {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      background: var(--bg-elevated);
+      padding: 20px 24px;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .comparison-header span:not(:first-child) {
+      text-align: center;
+    }
+
+    .comparison-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+      font-size: 15px;
+    }
+
+    .comparison-row:last-child {
+      border-bottom: none;
+    }
+
+    .comparison-row span:first-child {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .comparison-row span:not(:first-child) {
+      text-align: center;
+    }
+
+    .check {
+      color: var(--success);
+      font-size: 18px;
+    }
+
+    .cross {
+      color: #ef4444;
+      font-size: 18px;
+    }
+
+    .comparison-row .highlight {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
     }
 
     /* How it works */
@@ -593,6 +954,130 @@
       font-weight: 450;
     }
 
+    /* Installation Section */
+    .installation {
+      padding: 120px 0;
+    }
+
+    .install-steps {
+      max-width: 800px;
+      margin: 60px auto 0;
+    }
+
+    .install-step {
+      display: flex;
+      gap: 24px;
+      padding: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin-bottom: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .install-step:hover {
+      border-color: var(--accent);
+      transform: translateX(8px);
+    }
+
+    .install-step-num {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent);
+      color: white;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .install-step-content h4 {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-bright);
+      margin-bottom: 4px;
+    }
+
+    .install-step-content p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .install-step-content code {
+      display: inline-block;
+      background: var(--bg-elevated);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 13px;
+      color: var(--accent);
+      margin-top: 8px;
+    }
+
+    /* FAQ Section */
+    .faq {
+      padding: 120px 0;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .faq-grid {
+      max-width: 800px;
+      margin: 60px auto 0;
+    }
+
+    .faq-item {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .faq-question {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 0;
+      cursor: pointer;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-bright);
+      transition: color 0.2s ease;
+    }
+
+    .faq-question:hover {
+      color: var(--accent);
+    }
+
+    .faq-question svg {
+      transition: transform 0.3s ease;
+      flex-shrink: 0;
+      margin-left: 16px;
+    }
+
+    .faq-item.active .faq-question svg {
+      transform: rotate(180deg);
+    }
+
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+
+    .faq-item.active .faq-answer {
+      max-height: 200px;
+      padding-bottom: 24px;
+    }
+
+    .faq-answer p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
     /* CTA Section */
     .cta-section {
       padding: 120px 0;
@@ -638,6 +1123,7 @@
       display: flex;
       justify-content: center;
       gap: 16px;
+      flex-wrap: wrap;
     }
 
     /* Footer */
@@ -701,7 +1187,8 @@
         justify-content: center;
       }
 
-      .features-grid {
+      .features-grid,
+      .use-cases-grid {
         grid-template-columns: repeat(2, 1fr);
       }
 
@@ -713,6 +1200,10 @@
       .step::after {
         display: none;
       }
+
+      .comparison-table {
+        overflow-x: auto;
+      }
     }
 
     @media (max-width: 768px) {
@@ -720,11 +1211,16 @@
         display: none;
       }
 
-      h1 {
-        font-size: 40px;
+      .mobile-menu-btn {
+        display: flex;
       }
 
-      .features-grid {
+      h1 {
+        font-size: 36px;
+      }
+
+      .features-grid,
+      .use-cases-grid {
         grid-template-columns: 1fr;
       }
 
@@ -742,20 +1238,42 @@
         flex-direction: column;
         gap: 16px;
       }
+
+      .browser-logos {
+        gap: 32px;
+      }
+
+      .comparison-header,
+      .comparison-row {
+        grid-template-columns: 1.5fr 1fr 1fr;
+        font-size: 13px;
+        padding: 12px 16px;
+      }
+
+      .install-step {
+        flex-direction: column;
+        gap: 16px;
+      }
     }
   </style>
 </head>
 <body>
+  <!-- Skip to content link - Accessibility -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  
+  <!-- Scroll Progress Bar -->
+  <div class="scroll-progress" id="scrollProgress"></div>
+
   <div class="bg-gradient">
     <div class="blob blob-1"></div>
     <div class="blob blob-2"></div>
     <div class="blob blob-3"></div>
   </div>
 
-  <nav id="nav">
+  <nav id="nav" role="navigation" aria-label="Main navigation">
     <div class="container">
-      <a href="#" class="logo">
-        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <a href="#" class="logo" aria-label="ClipStash Home">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <rect x="4" y="2" width="16" height="22" rx="3" stroke="currentColor" stroke-width="2.5" fill="none"/>
           <rect x="12" y="8" width="16" height="22" rx="3" fill="currentColor" opacity="0.3" stroke="currentColor" stroke-width="2.5"/>
         </svg>
@@ -764,223 +1282,504 @@
       <div class="nav-links">
         <a href="#features">Features</a>
         <a href="#how-it-works">How it Works</a>
-        <a href="https://github.com" target="_blank">GitHub</a>
-        <a href="clipstash-extension.zip" download class="btn btn-primary">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <a href="#faq">FAQ</a>
+        <a href="https://github.com/draphael123/clipboard-app" target="_blank" rel="noopener">GitHub</a>
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+          <svg class="sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"/>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+          <svg class="moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+        </button>
+        <a href="clipstash-extension.zip" download class="btn btn-primary btn-sm">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
           </svg>
           Download
         </a>
       </div>
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle mobile menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
     </div>
   </nav>
 
-  <section class="hero">
-    <div class="container">
-      <div class="hero-content">
-        <div class="hero-text">
-          <div class="badge">
-            <span class="badge-dot"></span>
-            Free & Open Source
+  <!-- Mobile Menu -->
+  <div class="mobile-menu" id="mobileMenu" role="navigation" aria-label="Mobile navigation">
+    <a href="#features">Features</a>
+    <a href="#how-it-works">How it Works</a>
+    <a href="#installation">Installation</a>
+    <a href="#faq">FAQ</a>
+    <a href="https://github.com/draphael123/clipboard-app" target="_blank" rel="noopener">GitHub</a>
+    <a href="clipstash-extension.zip" download class="btn btn-primary">Download Extension</a>
+  </div>
+
+  <main id="main-content">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="container">
+        <div class="hero-content">
+          <div class="hero-text">
+            <div class="badge">
+              <span class="badge-dot"></span>
+              Free & Open Source
+            </div>
+            <h1 id="hero-title">
+              Your clipboard <span class="serif">history,</span><br>
+              <span class="gradient">always within reach</span>
+            </h1>
+            <p class="hero-description">
+              Stop losing that perfect code snippet or important link you copied an hour ago. ClipStash remembers everything, so you don't have to.
+            </p>
+            <div class="hero-cta">
+              <a href="clipstash-extension.zip" download class="btn btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.1 12.5l-5.5 5.5c-.2.2-.5.3-.8.3s-.6-.1-.8-.3l-5.5-5.5c-.4-.4-.4-1.1 0-1.5s1.1-.4 1.5 0l3.8 3.8V5c0-.6.5-1 1-1s1 .4 1 1v9.8l3.8-3.8c.4-.4 1.1-.4 1.5 0s.4 1.1 0 1.5z"/>
+                </svg>
+                Add to Chrome
+              </a>
+              <a href="#features" class="btn btn-ghost">
+                Learn More
+              </a>
+            </div>
           </div>
-          <h1>
-            Your clipboard <span class="serif">history,</span><br>
-            <span class="gradient">always within reach</span>
-          </h1>
-          <p class="hero-description">
-            Stop losing that perfect code snippet or important link you copied an hour ago. ClipStash remembers everything, so you don't have to.
-          </p>
-          <div class="hero-cta">
+          <div class="hero-visual">
+            <div class="browser-mockup">
+              <div class="browser-header">
+                <div class="browser-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+              <div class="browser-content">
+                <div class="extension-preview">
+                  <div class="ext-header">
+                    <div class="ext-logo">
+                      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <rect x="4" y="2" width="12" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+                        <rect x="8" y="6" width="12" height="16" rx="2" fill="currentColor" opacity="0.3" stroke="currentColor" stroke-width="2"/>
+                      </svg>
+                      ClipStash
+                    </div>
+                    <div class="ext-actions">
+                      <button aria-label="Search clips">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                          <circle cx="11" cy="11" r="8"/>
+                          <path d="M21 21l-4.35-4.35"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="ext-clips">
+                    <div class="ext-clip">
+                      <div class="ext-clip-text">const handleSubmit = async (data) =&gt; {<br>&nbsp;&nbsp;await api.post('/users', data);</div>
+                      <div class="ext-clip-meta">
+                        <span class="ext-clip-type code">CODE</span>
+                        <span class="ext-clip-time">2m ago</span>
+                      </div>
+                    </div>
+                    <div class="ext-clip">
+                      <div class="ext-clip-text">https://github.com/clipstash/extension</div>
+                      <div class="ext-clip-meta">
+                        <span class="ext-clip-type url">URL</span>
+                        <span class="ext-clip-time">15m ago</span>
+                      </div>
+                    </div>
+                    <div class="ext-clip">
+                      <div class="ext-clip-text">Meeting notes: Q1 product roadmap review with design team...</div>
+                      <div class="ext-clip-meta">
+                        <span class="ext-clip-type">TEXT</span>
+                        <span class="ext-clip-time">1h ago</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Browser Compatibility -->
+    <section class="browsers" aria-label="Supported browsers">
+      <div class="container">
+        <div class="browsers-content">
+          <p>Works with all Chromium-based browsers</p>
+          <div class="browser-logos">
+            <div class="browser-logo">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="24" cy="24" r="20" fill="#4285F4"/>
+                <circle cx="24" cy="24" r="8" fill="white"/>
+                <path d="M24 4C12.954 4 4 12.954 4 24h20V4z" fill="#EA4335"/>
+                <path d="M4 24c0 11.046 8.954 20 20 20V24H4z" fill="#34A853"/>
+                <path d="M24 44c11.046 0 20-8.954 20-20H24v20z" fill="#FBBC05"/>
+              </svg>
+              <span>Chrome</span>
+            </div>
+            <div class="browser-logo">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M24 4L4 24l20 20 20-20L24 4z" fill="#0078D4"/>
+                <path d="M24 12l-12 12 12 12 12-12-12-12z" fill="#50E6FF"/>
+              </svg>
+              <span>Edge</span>
+            </div>
+            <div class="browser-logo">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="24" cy="24" r="20" fill="#FB542B"/>
+                <path d="M24 8c-8.837 0-16 7.163-16 16s7.163 16 16 16c2.67 0 5.182-.656 7.393-1.813C27.456 35.844 24 31.29 24 26c0-5.29 3.456-9.844 8.393-12.187A15.923 15.923 0 0024 8z" fill="#9E2E17"/>
+              </svg>
+              <span>Brave</span>
+            </div>
+            <div class="browser-logo">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="4" y="4" width="40" height="40" rx="10" fill="linear-gradient(135deg, #FF6B6B, #4ECDC4)"/>
+                <circle cx="24" cy="24" r="12" fill="white"/>
+                <path d="M24 16v16M16 24h16" stroke="#333" stroke-width="2"/>
+              </svg>
+              <span>Arc</span>
+            </div>
+            <div class="browser-logo">
+              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="24" cy="24" r="20" fill="#1DA462"/>
+                <path d="M16 18h16v12H16z" fill="white"/>
+              </svg>
+              <span>Opera</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Use Cases -->
+    <section class="use-cases" aria-labelledby="use-cases-title">
+      <div class="container">
+        <div class="section-header">
+          <h2 id="use-cases-title">Built for everyone</h2>
+          <p>Whether you're coding, writing, or researching, ClipStash has you covered</p>
+        </div>
+        <div class="use-cases-grid">
+          <div class="use-case-card">
+            <div class="use-case-emoji">👨‍💻</div>
+            <h3>For Developers</h3>
+            <p>Save code snippets, terminal commands, and API keys. Never lose that regex pattern you spent 20 minutes crafting.</p>
+          </div>
+          <div class="use-case-card">
+            <div class="use-case-emoji">✍️</div>
+            <h3>For Writers</h3>
+            <p>Collect research quotes, source URLs, and notes. Build your article from clipboard fragments seamlessly.</p>
+          </div>
+          <div class="use-case-card">
+            <div class="use-case-emoji">🎓</div>
+            <h3>For Students</h3>
+            <p>Gather citations, definitions, and study materials. Your clipboard becomes a research assistant.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features" id="features" aria-labelledby="features-title">
+      <div class="container">
+        <div class="section-header">
+          <h2 id="features-title">Everything you need</h2>
+          <p>Powerful features wrapped in a minimal, distraction-free interface</p>
+        </div>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+              </svg>
+            </div>
+            <h3>Unlimited History</h3>
+            <p>Store up to 100 clips locally on your device. Pinned items never expire.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="M21 21l-4.35-4.35"/>
+              </svg>
+            </div>
+            <h3>Instant Search</h3>
+            <p>Find any clip in milliseconds with fuzzy search. No more scrolling.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <h3>100% Private</h3>
+            <p>All data stays on your device. No accounts, no cloud, no tracking.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+              </svg>
+            </div>
+            <h3>Pin Important Clips</h3>
+            <p>Keep frequently used snippets at the top for quick access anytime.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
+              </svg>
+            </div>
+            <h3>Smart Detection</h3>
+            <p>Automatically tags URLs, code snippets, emails, and phone numbers.</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+              </svg>
+            </div>
+            <h3>One-Click Copy</h3>
+            <p>Click any clip to instantly copy it back to your clipboard.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comparison -->
+    <section class="comparison" aria-labelledby="comparison-title">
+      <div class="container">
+        <div class="section-header">
+          <h2 id="comparison-title">Why ClipStash?</h2>
+          <p>See how we compare to other clipboard managers</p>
+        </div>
+        <div class="comparison-table" role="table" aria-label="Feature comparison table">
+          <div class="comparison-header" role="row">
+            <span role="columnheader">Feature</span>
+            <span role="columnheader" class="highlight">ClipStash</span>
+            <span role="columnheader">Others</span>
+          </div>
+          <div class="comparison-row" role="row">
+            <span role="cell">Free forever</span>
+            <span role="cell" class="check">✓</span>
+            <span role="cell" class="cross">✗</span>
+          </div>
+          <div class="comparison-row" role="row">
+            <span role="cell">No account required</span>
+            <span role="cell" class="check">✓</span>
+            <span role="cell" class="cross">✗</span>
+          </div>
+          <div class="comparison-row" role="row">
+            <span role="cell">100% offline & private</span>
+            <span role="cell" class="check">✓</span>
+            <span role="cell" class="cross">✗</span>
+          </div>
+          <div class="comparison-row" role="row">
+            <span role="cell">Open source</span>
+            <span role="cell" class="check">✓</span>
+            <span role="cell" class="cross">✗</span>
+          </div>
+          <div class="comparison-row" role="row">
+            <span role="cell">Smart content detection</span>
+            <span role="cell" class="check">✓</span>
+            <span role="cell" class="check">✓</span>
+          </div>
+          <div class="comparison-row" role="row">
+            <span role="cell">Instant search</span>
+            <span role="cell" class="check">✓</span>
+            <span role="cell" class="check">✓</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="how-it-works" id="how-it-works" aria-labelledby="how-it-works-title">
+      <div class="container">
+        <div class="section-header">
+          <h2 id="how-it-works-title">How it works</h2>
+          <p>Get started in seconds with zero configuration</p>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <h3>Install Extension</h3>
+            <p>Download and add ClipStash to your browser in under a minute</p>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <h3>Copy Anything</h3>
+            <p>Every time you copy text, ClipStash automatically saves it</p>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <h3>Access Anytime</h3>
+            <p>Click the extension icon to view, search, and reuse your clips</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Installation -->
+    <section class="installation" id="installation" aria-labelledby="installation-title">
+      <div class="container">
+        <div class="section-header">
+          <h2 id="installation-title">Installation Guide</h2>
+          <p>Follow these simple steps to install ClipStash manually</p>
+        </div>
+        <div class="install-steps">
+          <div class="install-step">
+            <div class="install-step-num">1</div>
+            <div class="install-step-content">
+              <h4>Download the Extension</h4>
+              <p>Click the download button to get the ClipStash extension zip file.</p>
+              <a href="clipstash-extension.zip" download class="btn btn-primary btn-sm" style="margin-top: 12px;">Download ZIP</a>
+            </div>
+          </div>
+          <div class="install-step">
+            <div class="install-step-num">2</div>
+            <div class="install-step-content">
+              <h4>Extract the ZIP File</h4>
+              <p>Right-click the downloaded file and select "Extract All" (Windows) or double-click to unzip (Mac).</p>
+            </div>
+          </div>
+          <div class="install-step">
+            <div class="install-step-num">3</div>
+            <div class="install-step-content">
+              <h4>Open Extensions Page</h4>
+              <p>Open Chrome and navigate to the extensions page.</p>
+              <code>chrome://extensions</code>
+            </div>
+          </div>
+          <div class="install-step">
+            <div class="install-step-num">4</div>
+            <div class="install-step-content">
+              <h4>Enable Developer Mode</h4>
+              <p>Toggle the "Developer mode" switch in the top-right corner of the extensions page.</p>
+            </div>
+          </div>
+          <div class="install-step">
+            <div class="install-step-num">5</div>
+            <div class="install-step-content">
+              <h4>Load the Extension</h4>
+              <p>Click "Load unpacked" and select the extracted ClipStash folder. You're all set!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq" id="faq" aria-labelledby="faq-title">
+      <div class="container">
+        <div class="section-header">
+          <h2 id="faq-title">Frequently Asked Questions</h2>
+          <p>Got questions? We've got answers</p>
+        </div>
+        <div class="faq-grid">
+          <div class="faq-item">
+            <div class="faq-question" role="button" tabindex="0" aria-expanded="false">
+              Is my clipboard data secure?
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </div>
+            <div class="faq-answer">
+              <p>Absolutely! All your clipboard data is stored locally on your device using Chrome's secure storage API. Nothing is ever sent to external servers. Your data stays private and under your control.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question" role="button" tabindex="0" aria-expanded="false">
+              Does ClipStash work offline?
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </div>
+            <div class="faq-answer">
+              <p>Yes! ClipStash works completely offline. Since all data is stored locally, you can access your clipboard history anytime, even without an internet connection.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question" role="button" tabindex="0" aria-expanded="false">
+              What browsers are supported?
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </div>
+            <div class="faq-answer">
+              <p>ClipStash works with all Chromium-based browsers including Google Chrome, Microsoft Edge, Brave, Arc, Opera, and Vivaldi.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question" role="button" tabindex="0" aria-expanded="false">
+              How many clips can I store?
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </div>
+            <div class="faq-answer">
+              <p>ClipStash stores up to 100 clips by default. Pinned items don't count toward this limit and are kept indefinitely. Older unpinned clips are automatically removed when the limit is reached.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question" role="button" tabindex="0" aria-expanded="false">
+              Is ClipStash really free?
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </div>
+            <div class="faq-answer">
+              <p>Yes, ClipStash is completely free and open source. There are no premium tiers, no subscriptions, and no hidden costs. We believe everyone deserves a great clipboard manager.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-question" role="button" tabindex="0" aria-expanded="false">
+              Can I sync clips across devices?
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </div>
+            <div class="faq-answer">
+              <p>Currently, ClipStash stores data locally for maximum privacy. Cross-device sync is on our roadmap as an optional feature for users who want it.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section" id="download" aria-labelledby="cta-title">
+      <div class="container">
+        <div class="cta-box">
+          <h2 id="cta-title">Ready to never lose a clip again?</h2>
+          <p>Join thousands of developers, writers, and power users who trust ClipStash with their clipboard.</p>
+          <div class="cta-buttons">
             <a href="clipstash-extension.zip" download class="btn btn-primary">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.1 12.5l-5.5 5.5c-.2.2-.5.3-.8.3s-.6-.1-.8-.3l-5.5-5.5c-.4-.4-.4-1.1 0-1.5s1.1-.4 1.5 0l3.8 3.8V5c0-.6.5-1 1-1s1 .4 1 1v9.8l3.8-3.8c.4-.4 1.1-.4 1.5 0s.4 1.1 0 1.5z"/>
               </svg>
-              Add to Chrome
+              Add to Chrome — It's Free
             </a>
-            <a href="#features" class="btn btn-ghost">
-              Learn More
+            <a href="https://github.com/draphael123/clipboard-app" target="_blank" rel="noopener" class="btn btn-ghost">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+              </svg>
+              View on GitHub
             </a>
           </div>
         </div>
-        <div class="hero-visual">
-          <div class="browser-mockup">
-            <div class="browser-header">
-              <div class="browser-dots">
-                <span></span>
-                <span></span>
-                <span></span>
-              </div>
-            </div>
-            <div class="browser-content">
-              <div class="extension-preview">
-                <div class="ext-header">
-                  <div class="ext-logo">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="4" y="2" width="12" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
-                      <rect x="8" y="6" width="12" height="16" rx="2" fill="currentColor" opacity="0.3" stroke="currentColor" stroke-width="2"/>
-                    </svg>
-                    ClipStash
-                  </div>
-                  <div class="ext-actions">
-                    <button>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"/>
-                        <path d="M21 21l-4.35-4.35"/>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-                <div class="ext-clips">
-                  <div class="ext-clip">
-                    <div class="ext-clip-text">const handleSubmit = async (data) => {<br>&nbsp;&nbsp;await api.post('/users', data);</div>
-                    <div class="ext-clip-meta">
-                      <span class="ext-clip-type code">CODE</span>
-                      <span class="ext-clip-time">2m ago</span>
-                    </div>
-                  </div>
-                  <div class="ext-clip">
-                    <div class="ext-clip-text">https://github.com/clipstash/extension</div>
-                    <div class="ext-clip-meta">
-                      <span class="ext-clip-type url">URL</span>
-                      <span class="ext-clip-time">15m ago</span>
-                    </div>
-                  </div>
-                  <div class="ext-clip">
-                    <div class="ext-clip-text">Meeting notes: Q1 product roadmap review with design team and stakeholders...</div>
-                    <div class="ext-clip-meta">
-                      <span class="ext-clip-type">TEXT</span>
-                      <span class="ext-clip-time">1h ago</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  </main>
 
-  <section class="features" id="features">
-    <div class="container">
-      <div class="section-header">
-        <h2>Everything you need</h2>
-        <p>Powerful features wrapped in a minimal, distraction-free interface</p>
-      </div>
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
-            </svg>
-          </div>
-          <h3>Unlimited History</h3>
-          <p>Store up to 100 clips locally on your device. Pinned items never expire.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"/>
-              <path d="M21 21l-4.35-4.35"/>
-            </svg>
-          </div>
-          <h3>Instant Search</h3>
-          <p>Find any clip in milliseconds with fuzzy search. No more scrolling.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-          </div>
-          <h3>100% Private</h3>
-          <p>All data stays on your device. No accounts, no cloud, no tracking.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
-            </svg>
-          </div>
-          <h3>Pin Important Clips</h3>
-          <p>Keep frequently used snippets at the top for quick access anytime.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/>
-            </svg>
-          </div>
-          <h3>Smart Detection</h3>
-          <p>Automatically tags URLs, code snippets, emails, and phone numbers.</p>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-            </svg>
-          </div>
-          <h3>One-Click Copy</h3>
-          <p>Click any clip to instantly copy it back to your clipboard.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="how-it-works" id="how-it-works">
-    <div class="container">
-      <div class="section-header">
-        <h2>How it works</h2>
-        <p>Get started in seconds with zero configuration</p>
-      </div>
-      <div class="steps">
-        <div class="step">
-          <div class="step-number">1</div>
-          <h3>Install Extension</h3>
-          <p>Add ClipStash to Chrome with a single click from the Web Store</p>
-        </div>
-        <div class="step">
-          <div class="step-number">2</div>
-          <h3>Copy Anything</h3>
-          <p>Every time you copy text, ClipStash automatically saves it</p>
-        </div>
-        <div class="step">
-          <div class="step-number">3</div>
-          <h3>Access Anytime</h3>
-          <p>Click the extension icon to view, search, and reuse your clips</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="cta-section" id="download">
-    <div class="container">
-      <div class="cta-box">
-        <h2>Ready to never lose a clip again?</h2>
-        <p>Join thousands of developers, writers, and power users who trust ClipStash with their clipboard.</p>
-        <div class="cta-buttons">
-          <a href="clipstash-extension.zip" download class="btn btn-primary">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm5.1 12.5l-5.5 5.5c-.2.2-.5.3-.8.3s-.6-.1-.8-.3l-5.5-5.5c-.4-.4-.4-1.1 0-1.5s1.1-.4 1.5 0l3.8 3.8V5c0-.6.5-1 1-1s1 .4 1 1v9.8l3.8-3.8c.4-.4 1.1-.4 1.5 0s.4 1.1 0 1.5z"/>
-            </svg>
-            Add to Chrome — It's Free
-          </a>
-          <a href="https://github.com" target="_blank" class="btn btn-ghost">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
-            </svg>
-            View on GitHub
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <footer>
+  <footer role="contentinfo">
     <div class="container">
       <div class="footer-left">
-        <a href="#" class="logo">
-          <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <a href="#" class="logo" aria-label="ClipStash Home">
+          <svg width="24" height="24" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <rect x="4" y="2" width="16" height="22" rx="3" stroke="currentColor" stroke-width="2.5" fill="none"/>
             <rect x="12" y="8" width="16" height="22" rx="3" fill="currentColor" opacity="0.3" stroke="currentColor" stroke-width="2.5"/>
           </svg>
@@ -989,19 +1788,94 @@
         <span class="footer-text">© 2026 ClipStash. Open source under MIT License.</span>
       </div>
       <div class="footer-links">
-        <a href="#">Privacy</a>
-        <a href="#">Terms</a>
-        <a href="https://github.com" target="_blank">GitHub</a>
-        <a href="https://twitter.com" target="_blank">Twitter</a>
+        <a href="#faq">FAQ</a>
+        <a href="https://github.com/draphael123/clipboard-app" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://twitter.com" target="_blank" rel="noopener">Twitter</a>
       </div>
     </div>
   </footer>
 
   <script>
+    // Scroll Progress Bar
+    const scrollProgress = document.getElementById('scrollProgress');
+    window.addEventListener('scroll', () => {
+      const scrollTop = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const scrollPercent = (scrollTop / docHeight) * 100;
+      scrollProgress.style.width = scrollPercent + '%';
+    });
+
     // Navbar scroll effect
     const nav = document.getElementById('nav');
     window.addEventListener('scroll', () => {
       nav.classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // Mobile menu toggle
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    
+    mobileMenuBtn.addEventListener('click', () => {
+      mobileMenuBtn.classList.toggle('active');
+      mobileMenu.classList.toggle('active');
+      const isExpanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
+      mobileMenuBtn.setAttribute('aria-expanded', !isExpanded);
+    });
+
+    // Close mobile menu when clicking a link
+    mobileMenu.querySelectorAll('a').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenuBtn.classList.remove('active');
+        mobileMenu.classList.remove('active');
+        mobileMenuBtn.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    // Theme toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Check for saved theme preference or use system preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    } else if (prefersDark) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+    });
+
+    // FAQ accordion
+    document.querySelectorAll('.faq-question').forEach(question => {
+      question.addEventListener('click', () => {
+        const item = question.parentElement;
+        const isActive = item.classList.contains('active');
+        
+        // Close all other items
+        document.querySelectorAll('.faq-item').forEach(i => {
+          i.classList.remove('active');
+          i.querySelector('.faq-question').setAttribute('aria-expanded', 'false');
+        });
+        
+        // Toggle current item
+        if (!isActive) {
+          item.classList.add('active');
+          question.setAttribute('aria-expanded', 'true');
+        }
+      });
+
+      // Keyboard accessibility
+      question.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          question.click();
+        }
+      });
     });
 
     // Smooth scroll for anchor links
@@ -1030,7 +1904,7 @@
       });
     }, observerOptions);
 
-    document.querySelectorAll('.feature-card, .step').forEach(el => {
+    document.querySelectorAll('.feature-card, .step, .use-case-card, .install-step').forEach(el => {
       el.style.opacity = '0';
       el.style.transform = 'translateY(20px)';
       el.style.transition = 'all 0.6s ease';
@@ -1039,4 +1913,3 @@
   </script>
 </body>
 </html>
-
