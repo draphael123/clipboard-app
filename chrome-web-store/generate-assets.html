@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClipStash - Chrome Web Store Asset Generator</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f14;
+      color: #f0f0f5;
+      padding: 40px;
+      line-height: 1.6;
+    }
+    h1 { margin-bottom: 8px; }
+    .subtitle { color: #888; margin-bottom: 40px; }
+    .section { margin-bottom: 48px; }
+    .section h2 { 
+      font-size: 18px; 
+      margin-bottom: 16px; 
+      padding-bottom: 8px;
+      border-bottom: 1px solid #333;
+    }
+    .assets { display: flex; flex-wrap: wrap; gap: 24px; }
+    .asset {
+      background: #17171c;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    .asset canvas {
+      border: 1px solid #333;
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    .asset .label {
+      font-size: 14px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+    .asset .size {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 12px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 10px 20px;
+      background: #5b3fd4;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      text-decoration: none;
+    }
+    .btn:hover { background: #7c5cff; }
+    .instructions {
+      background: #1e1e25;
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 40px;
+    }
+    .instructions h3 { margin-bottom: 16px; }
+    .instructions ol { padding-left: 24px; }
+    .instructions li { margin-bottom: 12px; }
+    .instructions code {
+      background: #0f0f14;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    .checklist {
+      background: #1e1e25;
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 24px;
+    }
+    .checklist label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .checklist label:hover { background: #252530; }
+    .checklist input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: #5b3fd4;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎨 Chrome Web Store Asset Generator</h1>
+  <p class="subtitle">Click each button to download the required assets</p>
+
+  <div class="section">
+    <h2>📦 Required: Store Icon (128x128)</h2>
+    <div class="assets">
+      <div class="asset">
+        <canvas id="icon128" width="128" height="128"></canvas>
+        <div class="label">Store Icon</div>
+        <div class="size">128 × 128 px</div>
+        <button class="btn" onclick="download('icon128', 'clipstash-icon-128.png')">Download PNG</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📱 Extension Icons (for manifest.json)</h2>
+    <div class="assets">
+      <div class="asset">
+        <canvas id="icon16" width="16" height="16"></canvas>
+        <div class="label">Toolbar Icon</div>
+        <div class="size">16 × 16 px</div>
+        <button class="btn" onclick="download('icon16', 'icon16.png')">Download</button>
+      </div>
+      <div class="asset">
+        <canvas id="icon32" width="32" height="32"></canvas>
+        <div class="label">Toolbar Icon @2x</div>
+        <div class="size">32 × 32 px</div>
+        <button class="btn" onclick="download('icon32', 'icon32.png')">Download</button>
+      </div>
+      <div class="asset">
+        <canvas id="icon48" width="48" height="48"></canvas>
+        <div class="label">Extension Page</div>
+        <div class="size">48 × 48 px</div>
+        <button class="btn" onclick="download('icon48', 'icon48.png')">Download</button>
+      </div>
+      <div class="asset">
+        <canvas id="icon128m" width="128" height="128"></canvas>
+        <div class="label">Extension Page Large</div>
+        <div class="size">128 × 128 px</div>
+        <button class="btn" onclick="download('icon128m', 'icon128.png')">Download</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🖼️ Promotional Tile (440x280)</h2>
+    <div class="assets">
+      <div class="asset">
+        <canvas id="promo440" width="440" height="280"></canvas>
+        <div class="label">Small Promo Tile</div>
+        <div class="size">440 × 280 px</div>
+        <button class="btn" onclick="download('promo440', 'clipstash-promo-440x280.png')">Download PNG</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🖼️ Large Promotional Tile (920x680)</h2>
+    <div class="assets">
+      <div class="asset">
+        <canvas id="promo920" width="920" height="680"></canvas>
+        <div class="label">Large Promo Tile</div>
+        <div class="size">920 × 680 px</div>
+        <button class="btn" onclick="download('promo920', 'clipstash-promo-920x680.png')">Download PNG</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🎬 Marquee Banner (1400x560)</h2>
+    <div class="assets">
+      <div class="asset">
+        <canvas id="marquee" width="1400" height="560"></canvas>
+        <div class="label">Marquee (Featured)</div>
+        <div class="size">1400 × 560 px</div>
+        <button class="btn" onclick="download('marquee', 'clipstash-marquee-1400x560.png')">Download PNG</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="instructions">
+    <h3>📋 Publishing Checklist</h3>
+    <div class="checklist">
+      <label><input type="checkbox"> Create Chrome Developer account ($5 fee)</label>
+      <label><input type="checkbox"> Download 128x128 store icon</label>
+      <label><input type="checkbox"> Download extension icons (16, 32, 48, 128) and replace in /extension/icons/</label>
+      <label><input type="checkbox"> Take 1-5 screenshots of extension (1280x800)</label>
+      <label><input type="checkbox"> Download promotional tiles (optional but recommended)</label>
+      <label><input type="checkbox"> Upload extension ZIP to Chrome Developer Dashboard</label>
+      <label><input type="checkbox"> Fill in store listing details</label>
+      <label><input type="checkbox"> Submit for review</label>
+    </div>
+  </div>
+
+  <div class="instructions">
+    <h3>📸 How to Take Screenshots</h3>
+    <ol>
+      <li>Open Chrome and click the ClipStash extension icon</li>
+      <li>Press <code>F12</code> to open DevTools</li>
+      <li>Press <code>Ctrl+Shift+M</code> to enter device mode</li>
+      <li>Set dimensions to <code>1280 × 800</code></li>
+      <li>Press <code>Ctrl+Shift+P</code>, type "screenshot", select "Capture screenshot"</li>
+      <li>Repeat for different views (main popup, templates, settings, etc.)</li>
+    </ol>
+  </div>
+
+  <script>
+    // Draw icon on canvas
+    function drawIcon(canvas, size) {
+      const ctx = canvas.getContext('2d');
+      const s = size / 128; // Scale factor
+      
+      // Background gradient
+      const grad = ctx.createLinearGradient(0, 0, size, size);
+      grad.addColorStop(0, '#7c5cff');
+      grad.addColorStop(1, '#5b3fd4');
+      
+      // Rounded rect background
+      ctx.beginPath();
+      const r = 22 * s;
+      ctx.moveTo(r, 0);
+      ctx.lineTo(size - r, 0);
+      ctx.quadraticCurveTo(size, 0, size, r);
+      ctx.lineTo(size, size - r);
+      ctx.quadraticCurveTo(size, size, size - r, size);
+      ctx.lineTo(r, size);
+      ctx.quadraticCurveTo(0, size, 0, size - r);
+      ctx.lineTo(0, r);
+      ctx.quadraticCurveTo(0, 0, r, 0);
+      ctx.fillStyle = grad;
+      ctx.fill();
+      
+      // Back clipboard (shadow)
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      roundRect(ctx, 50*s, 36*s, 48*s, 64*s, 6*s);
+      
+      // Front clipboard
+      ctx.fillStyle = '#ffffff';
+      roundRect(ctx, 30*s, 28*s, 48*s, 64*s, 6*s);
+      
+      // Clipboard clip
+      ctx.fillStyle = '#5b3fd4';
+      roundRect(ctx, 42*s, 22*s, 24*s, 12*s, 4*s);
+      
+      // Clip hole
+      ctx.fillStyle = '#ffffff';
+      roundRect(ctx, 48*s, 26*s, 12*s, 6*s, 2*s);
+      
+      // Lines
+      ctx.fillStyle = 'rgba(91, 63, 212, 0.6)';
+      roundRect(ctx, 38*s, 46*s, 32*s, 4*s, 2*s);
+      ctx.fillStyle = 'rgba(91, 63, 212, 0.4)';
+      roundRect(ctx, 38*s, 56*s, 24*s, 4*s, 2*s);
+      ctx.fillStyle = 'rgba(91, 63, 212, 0.3)';
+      roundRect(ctx, 38*s, 66*s, 28*s, 4*s, 2*s);
+      ctx.fillStyle = 'rgba(91, 63, 212, 0.2)';
+      roundRect(ctx, 38*s, 76*s, 20*s, 4*s, 2*s);
+    }
+    
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.fill();
+    }
+    
+    function drawPromo(canvas, width, height) {
+      const ctx = canvas.getContext('2d');
+      
+      // Background
+      const grad = ctx.createLinearGradient(0, 0, width, height);
+      grad.addColorStop(0, '#0f0f14');
+      grad.addColorStop(1, '#1a1a24');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, width, height);
+      
+      // Glow
+      const glowGrad = ctx.createRadialGradient(width * 0.7, height * 0.5, 0, width * 0.7, height * 0.5, width * 0.5);
+      glowGrad.addColorStop(0, 'rgba(91, 63, 212, 0.2)');
+      glowGrad.addColorStop(1, 'rgba(91, 63, 212, 0)');
+      ctx.fillStyle = glowGrad;
+      ctx.fillRect(0, 0, width, height);
+      
+      // Icon
+      const iconSize = Math.min(width, height) * 0.25;
+      const iconX = width * 0.08;
+      const iconY = (height - iconSize) / 2;
+      
+      // Draw mini icon
+      ctx.save();
+      ctx.translate(iconX, iconY);
+      
+      const s = iconSize / 128;
+      const igrad = ctx.createLinearGradient(0, 0, iconSize, iconSize);
+      igrad.addColorStop(0, '#7c5cff');
+      igrad.addColorStop(1, '#5b3fd4');
+      
+      ctx.beginPath();
+      const r = 22 * s;
+      ctx.moveTo(r, 0);
+      ctx.lineTo(iconSize - r, 0);
+      ctx.quadraticCurveTo(iconSize, 0, iconSize, r);
+      ctx.lineTo(iconSize, iconSize - r);
+      ctx.quadraticCurveTo(iconSize, iconSize, iconSize - r, iconSize);
+      ctx.lineTo(r, iconSize);
+      ctx.quadraticCurveTo(0, iconSize, 0, iconSize - r);
+      ctx.lineTo(0, r);
+      ctx.quadraticCurveTo(0, 0, r, 0);
+      ctx.fillStyle = igrad;
+      ctx.fill();
+      
+      ctx.fillStyle = 'rgba(255,255,255,0.25)';
+      roundRect(ctx, 50*s, 36*s, 48*s, 64*s, 6*s);
+      ctx.fillStyle = '#ffffff';
+      roundRect(ctx, 30*s, 28*s, 48*s, 64*s, 6*s);
+      ctx.fillStyle = '#5b3fd4';
+      roundRect(ctx, 42*s, 22*s, 24*s, 12*s, 4*s);
+      ctx.fillStyle = '#ffffff';
+      roundRect(ctx, 48*s, 26*s, 12*s, 6*s, 2*s);
+      ctx.fillStyle = 'rgba(91, 63, 212, 0.5)';
+      roundRect(ctx, 38*s, 46*s, 32*s, 4*s, 2*s);
+      roundRect(ctx, 38*s, 56*s, 24*s, 4*s, 2*s);
+      roundRect(ctx, 38*s, 66*s, 28*s, 4*s, 2*s);
+      
+      ctx.restore();
+      
+      // Text
+      const textX = iconX + iconSize + width * 0.05;
+      const fontSize = Math.min(width, height) * 0.1;
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+      ctx.fillText('ClipStash', textX, height * 0.38);
+      
+      ctx.fillStyle = '#a0a0b8';
+      ctx.font = `${fontSize * 0.5}px -apple-system, BlinkMacSystemFont, sans-serif`;
+      ctx.fillText('Clipboard History Manager', textX, height * 0.50);
+      
+      // Features
+      const features = ['✓ Save text & images', '✓ Organize with workspaces', '✓ 100% private & free'];
+      ctx.fillStyle = '#e0e0ea';
+      ctx.font = `${fontSize * 0.4}px -apple-system, BlinkMacSystemFont, sans-serif`;
+      
+      features.forEach((f, i) => {
+        ctx.fillText(f, textX, height * 0.62 + i * (fontSize * 0.55));
+      });
+    }
+    
+    function drawMarquee(canvas) {
+      const ctx = canvas.getContext('2d');
+      const w = 1400, h = 560;
+      
+      // Background
+      const grad = ctx.createLinearGradient(0, 0, w, h);
+      grad.addColorStop(0, '#0f0f14');
+      grad.addColorStop(1, '#1a1a24');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+      
+      // Multiple glows
+      [[w*0.2, h*0.5], [w*0.8, h*0.3]].forEach(([x, y]) => {
+        const glowGrad = ctx.createRadialGradient(x, y, 0, x, y, 300);
+        glowGrad.addColorStop(0, 'rgba(91, 63, 212, 0.15)');
+        glowGrad.addColorStop(1, 'rgba(91, 63, 212, 0)');
+        ctx.fillStyle = glowGrad;
+        ctx.fillRect(0, 0, w, h);
+      });
+      
+      // Large centered text
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 72px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('ClipStash', w/2, h * 0.35);
+      
+      ctx.fillStyle = '#a0a0b8';
+      ctx.font = '28px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.fillText('Your clipboard history, always within reach', w/2, h * 0.45);
+      
+      // Feature pills
+      const pills = ['📋 Text & Images', '📂 Workspaces', '📝 Templates', '🔒 Private'];
+      const pillWidth = 160;
+      const startX = (w - (pills.length * pillWidth + (pills.length - 1) * 20)) / 2;
+      
+      pills.forEach((pill, i) => {
+        const x = startX + i * (pillWidth + 20);
+        const y = h * 0.58;
+        
+        ctx.fillStyle = 'rgba(91, 63, 212, 0.3)';
+        ctx.beginPath();
+        ctx.roundRect(x, y, pillWidth, 44, 22);
+        ctx.fill();
+        
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '16px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(pill, x + pillWidth/2, y + 28);
+      });
+      
+      // Bottom tagline
+      ctx.fillStyle = '#666';
+      ctx.font = '18px -apple-system, BlinkMacSystemFont, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Free • Open Source • No Account Required', w/2, h * 0.85);
+    }
+    
+    // Download function
+    function download(canvasId, filename) {
+      const canvas = document.getElementById(canvasId);
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+    
+    // Initialize all canvases
+    window.onload = function() {
+      drawIcon(document.getElementById('icon16'), 16);
+      drawIcon(document.getElementById('icon32'), 32);
+      drawIcon(document.getElementById('icon48'), 48);
+      drawIcon(document.getElementById('icon128'), 128);
+      drawIcon(document.getElementById('icon128m'), 128);
+      drawPromo(document.getElementById('promo440'), 440, 280);
+      drawPromo(document.getElementById('promo920'), 920, 680);
+      drawMarquee(document.getElementById('marquee'));
+    };
+  </script>
+</body>
+</html>
+
