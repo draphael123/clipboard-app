@@ -1,24 +1,37 @@
-// ClipStash - Background Service Worker (Robust Version)
-// Handles clipboard history storage, context menus, commands
+// ClipStash v2.0 - Background Service Worker
+// Full-featured clipboard manager
 
-const MAX_HISTORY_SIZE = 100;
-const STORAGE_KEY = 'clipstash_history';
-const SETTINGS_KEY = 'clipstash_settings';
-const STATS_KEY = 'clipstash_stats';
+const STORAGE_KEYS = {
+  history: 'clipstash_history',
+  settings: 'clipstash_settings',
+  stats: 'clipstash_stats',
+  templates: 'clipstash_templates',
+  workspaces: 'clipstash_workspaces',
+  activeWorkspace: 'clipstash_active_workspace'
+};
 
 const DEFAULT_SETTINGS = {
-  maxHistorySize: 100,
+  maxHistorySize: 200,
   autoDeleteDays: 0,
   excludedSites: [],
-  showNotifications: true,
+  showNotifications: false,
   detectSensitive: true,
-  theme: 'system'
+  autoPaste: false,
+  theme: 'system',
+  defaultWorkspace: 'default'
 };
 
 const DEFAULT_STATS = {
   totalClipsSaved: 0,
-  totalCopiesFromHistory: 0
+  totalCopiesFromHistory: 0,
+  totalImagesSaved: 0
 };
+
+const DEFAULT_WORKSPACES = [
+  { id: 'default', name: 'Default', icon: '📋', color: '#5b3fd4' },
+  { id: 'work', name: 'Work', icon: '💼', color: '#059669' },
+  { id: 'code', name: 'Code', icon: '💻', color: '#0891b2' }
+];
 
 const SENSITIVE_PATTERNS = [
   /^sk-[a-zA-Z0-9]{20,}$/,
@@ -26,51 +39,50 @@ const SENSITIVE_PATTERNS = [
   /^AKIA[0-9A-Z]{16}$/,
   /password\s*[:=]\s*\S+/i,
   /^-----BEGIN.*PRIVATE KEY-----/m,
-  /^eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+/,  // JWT token
+  /^eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+/,
 ];
 
-// Initialize storage immediately
 let isInitialized = false;
 
-async function ensureInitialized() {
+// Initialize
+async function init() {
   if (isInitialized) return;
   
-  try {
-    const result = await chrome.storage.local.get([STORAGE_KEY, SETTINGS_KEY, STATS_KEY]);
-    
-    const updates = {};
-    if (!result[STORAGE_KEY]) updates[STORAGE_KEY] = [];
-    if (!result[SETTINGS_KEY]) updates[SETTINGS_KEY] = DEFAULT_SETTINGS;
-    if (!result[STATS_KEY]) updates[STATS_KEY] = DEFAULT_STATS;
-    
-    if (Object.keys(updates).length > 0) {
-      await chrome.storage.local.set(updates);
-    }
-    
-    isInitialized = true;
-    console.log('ClipStash: Storage initialized');
-  } catch (error) {
-    console.error('ClipStash: Init error:', error);
+  const defaults = {
+    [STORAGE_KEYS.history]: [],
+    [STORAGE_KEYS.settings]: DEFAULT_SETTINGS,
+    [STORAGE_KEYS.stats]: DEFAULT_STATS,
+    [STORAGE_KEYS.templates]: [],
+    [STORAGE_KEYS.workspaces]: DEFAULT_WORKSPACES,
+    [STORAGE_KEYS.activeWorkspace]: 'default'
+  };
+  
+  const result = await chrome.storage.local.get(Object.keys(defaults));
+  const updates = {};
+  
+  for (const [key, defaultValue] of Object.entries(defaults)) {
+    if (!result[key]) updates[key] = defaultValue;
   }
+  
+  if (Object.keys(updates).length > 0) {
+    await chrome.storage.local.set(updates);
+  }
+  
+  isInitialized = true;
 }
 
-// Initialize on service worker start
-ensureInitialized();
+init();
 
-// Also initialize on install/update
-chrome.runtime.onInstalled.addListener(async (details) => {
-  console.log('ClipStash: Installed/updated, reason:', details.reason);
+chrome.runtime.onInstalled.addListener(async () => {
   isInitialized = false;
-  await ensureInitialized();
+  await init();
   await createContextMenus();
   await updateBadge();
 });
 
-// Initialize on browser startup
 chrome.runtime.onStartup.addListener(async () => {
-  console.log('ClipStash: Browser startup');
   isInitialized = false;
-  await ensureInitialized();
+  await init();
   await createContextMenus();
   await updateBadge();
 });
@@ -80,17 +92,9 @@ async function createContextMenus() {
   try {
     await chrome.contextMenus.removeAll();
     
-    chrome.contextMenus.create({
-      id: 'save-selection',
-      title: 'Save to ClipStash',
-      contexts: ['selection']
-    });
-    
-    chrome.contextMenus.create({
-      id: 'paste-recent',
-      title: 'Paste from ClipStash',
-      contexts: ['editable']
-    });
+    chrome.contextMenus.create({ id: 'save-selection', title: 'Save to ClipStash', contexts: ['selection'] });
+    chrome.contextMenus.create({ id: 'save-image', title: 'Save Image to ClipStash', contexts: ['image'] });
+    chrome.contextMenus.create({ id: 'paste-recent', title: 'Paste from ClipStash', contexts: ['editable'] });
     
     for (let i = 1; i <= 5; i++) {
       chrome.contextMenus.create({
@@ -102,89 +106,110 @@ async function createContextMenus() {
     }
     
     await updateContextMenuClips();
-    console.log('ClipStash: Context menus created');
-  } catch (error) {
-    console.log('ClipStash: Context menu error:', error.message);
-  }
+  } catch (e) {}
 }
 
 async function updateContextMenuClips() {
   try {
-    const result = await chrome.storage.local.get(STORAGE_KEY);
-    const history = result[STORAGE_KEY] || [];
+    const result = await chrome.storage.local.get(STORAGE_KEYS.history);
+    const history = result[STORAGE_KEYS.history] || [];
     
     for (let i = 1; i <= 5; i++) {
       const clip = history[i - 1];
-      const title = clip 
-        ? `${i}. ${clip.content.substring(0, 35)}${clip.content.length > 35 ? '...' : ''}`
-        : `${i}. (empty)`;
-      
+      let title = `${i}. (empty)`;
+      if (clip) {
+        if (clip.type === 'image') {
+          title = `${i}. 🖼️ Image`;
+        } else {
+          title = `${i}. ${clip.content.substring(0, 30)}${clip.content.length > 30 ? '...' : ''}`;
+        }
+      }
       await chrome.contextMenus.update(`paste-recent-${i}`, { title }).catch(() => {});
     }
-  } catch (error) {
-    // Silently fail - menus might not exist yet
-  }
+  } catch (e) {}
 }
 
-// Context menu click handler
 chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-  await ensureInitialized();
+  await init();
   
   if (info.menuItemId === 'save-selection' && info.selectionText) {
-    const hostname = tab?.url ? new URL(tab.url).hostname : 'unknown';
     await saveClip({
       content: info.selectionText,
-      type: detectContentType(info.selectionText),
-      source: { url: tab?.url, title: tab?.title, hostname }
+      type: detectType(info.selectionText),
+      source: { url: tab?.url, title: tab?.title, hostname: new URL(tab?.url || 'http://x').hostname }
     });
-    console.log('ClipStash: Saved from context menu');
+  }
+  
+  if (info.menuItemId === 'save-image' && info.srcUrl) {
+    await saveClip({
+      content: info.srcUrl,
+      type: 'image',
+      source: { url: tab?.url, title: tab?.title, hostname: new URL(tab?.url || 'http://x').hostname }
+    });
   }
   
   if (info.menuItemId.startsWith('paste-recent-')) {
     const index = parseInt(info.menuItemId.split('-')[2]) - 1;
-    const result = await chrome.storage.local.get(STORAGE_KEY);
-    const history = result[STORAGE_KEY] || [];
+    const result = await chrome.storage.local.get(STORAGE_KEYS.history);
+    const clip = (result[STORAGE_KEYS.history] || [])[index];
     
-    if (history[index] && tab?.id) {
-      try {
+    if (clip && tab?.id && clip.type !== 'image') {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        func: (text) => {
+          navigator.clipboard.writeText(text);
+          const el = document.activeElement;
+          if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) {
+            document.execCommand('insertText', false, text);
+          }
+        },
+        args: [clip.content]
+      }).catch(() => {});
+    }
+  }
+});
+
+// Commands
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command.startsWith('copy-recent-')) {
+    await init();
+    const index = parseInt(command.split('-')[2]) - 1;
+    const result = await chrome.storage.local.get([STORAGE_KEYS.history, STORAGE_KEYS.settings]);
+    const clip = (result[STORAGE_KEYS.history] || [])[index];
+    const settings = result[STORAGE_KEYS.settings] || DEFAULT_SETTINGS;
+    
+    if (clip && clip.type !== 'image') {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab?.id) {
+        const shouldPaste = settings.autoPaste;
         await chrome.scripting.executeScript({
           target: { tabId: tab.id },
-          func: (text) => {
+          func: (text, paste) => {
             navigator.clipboard.writeText(text);
-            const el = document.activeElement;
-            if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) {
-              document.execCommand('insertText', false, text);
+            if (paste) {
+              const el = document.activeElement;
+              if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)) {
+                document.execCommand('insertText', false, text);
+              }
             }
           },
-          args: [history[index].content]
-        });
-      } catch (error) {
-        console.log('ClipStash: Could not paste:', error.message);
+          args: [clip.content, shouldPaste]
+        }).catch(() => {});
       }
     }
   }
 });
 
 // Omnibox
-chrome.omnibox.onInputStarted.addListener(() => {
-  chrome.omnibox.setDefaultSuggestion({
-    description: 'Search your clipboard history'
-  });
-});
-
 chrome.omnibox.onInputChanged.addListener(async (text, suggest) => {
-  await ensureInitialized();
-  const result = await chrome.storage.local.get(STORAGE_KEY);
-  const history = result[STORAGE_KEY] || [];
+  await init();
+  const result = await chrome.storage.local.get(STORAGE_KEYS.history);
+  const history = (result[STORAGE_KEYS.history] || []).filter(c => c.type !== 'image');
   
-  const query = text.toLowerCase();
   const matches = history
-    .filter(clip => clip.content.toLowerCase().includes(query))
+    .filter(c => c.content.toLowerCase().includes(text.toLowerCase()))
     .slice(0, 5)
-    .map(clip => ({
-      content: clip.content.substring(0, 100),
-      description: escapeXml(clip.content.substring(0, 60))
-    }));
+    .map(c => ({ content: c.content.substring(0, 100), description: c.content.substring(0, 60) }));
   
   suggest(matches);
 });
@@ -192,402 +217,395 @@ chrome.omnibox.onInputChanged.addListener(async (text, suggest) => {
 chrome.omnibox.onInputEntered.addListener(async (text) => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (tab?.id) {
-    try {
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: (text) => navigator.clipboard.writeText(text),
-        args: [text]
-      });
-    } catch (error) {
-      console.log('ClipStash: Omnibox copy error:', error.message);
-    }
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: (t) => navigator.clipboard.writeText(t),
+      args: [text]
+    }).catch(() => {});
   }
 });
 
-// Keyboard commands
-chrome.commands.onCommand.addListener(async (command) => {
-  if (command.startsWith('copy-recent-')) {
-    await ensureInitialized();
-    const index = parseInt(command.split('-')[2]) - 1;
-    const result = await chrome.storage.local.get(STORAGE_KEY);
-    const history = result[STORAGE_KEY] || [];
-    
-    if (history[index]) {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tab?.id) {
-        try {
-          await chrome.scripting.executeScript({
-            target: { tabId: tab.id },
-            func: (text) => navigator.clipboard.writeText(text),
-            args: [history[index].content]
-          });
-          console.log('ClipStash: Quick-copied clip', index + 1);
-        } catch (error) {
-          console.log('ClipStash: Quick-copy error:', error.message);
-        }
-      }
-    }
-  }
-});
-
-// Message handler
+// Message Handler
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  // Log the message type
-  console.log('ClipStash: Message received:', message.type);
-  
-  // Handle async
-  handleMessage(message).then(response => {
-    console.log('ClipStash: Responding:', response?.success ?? response);
-    sendResponse(response);
-  }).catch(error => {
-    console.error('ClipStash: Message handler error:', error);
-    sendResponse({ success: false, error: error.message });
-  });
-  
-  return true; // Keep channel open for async response
+  handleMessage(message).then(sendResponse).catch(e => sendResponse({ success: false, error: e.message }));
+  return true;
 });
 
-async function handleMessage(message) {
-  await ensureInitialized();
+async function handleMessage(msg) {
+  await init();
   
-  switch (message.type) {
-    case 'SAVE_CLIP':
-      return await saveClip(message.data);
-    case 'GET_HISTORY':
-      return await getHistory(message.filters);
-    case 'DELETE_CLIP':
-      return await deleteClip(message.id);
-    case 'CLEAR_HISTORY':
-      return await clearHistory();
-    case 'PIN_CLIP':
-      return await togglePin(message.id);
-    case 'GET_SETTINGS':
-      return await getSettings();
-    case 'SAVE_SETTINGS':
-      return await saveSettings(message.settings);
-    case 'GET_STATS':
-      return await getStats();
-    case 'EXPORT_DATA':
-      return await exportData();
-    case 'IMPORT_DATA':
-      return await importData(message.data);
-    case 'SET_CATEGORY':
-      return await setCategory(message.id, message.category);
-    case 'GET_CATEGORIES':
-      return await getCategories();
-    case 'INCREMENT_COPY':
-      return await incrementCopyCount(message.id);
-    case 'CHECK_STORAGE':
-      return await checkStorageQuota();
-    default:
-      return { success: false, error: 'Unknown message type: ' + message.type };
+  switch (msg.type) {
+    case 'SAVE_CLIP': return await saveClip(msg.data);
+    case 'GET_HISTORY': return await getHistory(msg.filters);
+    case 'DELETE_CLIP': return await deleteClip(msg.id);
+    case 'CLEAR_HISTORY': return await clearHistory();
+    case 'PIN_CLIP': return await togglePin(msg.id);
+    case 'EDIT_CLIP': return await editClip(msg.id, msg.content);
+    case 'MERGE_CLIPS': return await mergeClips(msg.ids, msg.separator);
+    case 'SET_NOTE': return await setNote(msg.id, msg.note);
+    case 'SET_CATEGORY': return await setCategory(msg.id, msg.category);
+    case 'SET_WORKSPACE': return await setWorkspace(msg.id, msg.workspace);
+    case 'GET_SETTINGS': return await getSettings();
+    case 'SAVE_SETTINGS': return await saveSettings(msg.settings);
+    case 'GET_STATS': return await getStats();
+    case 'GET_TEMPLATES': return await getTemplates();
+    case 'SAVE_TEMPLATE': return await saveTemplate(msg.template);
+    case 'DELETE_TEMPLATE': return await deleteTemplate(msg.id);
+    case 'GET_WORKSPACES': return await getWorkspaces();
+    case 'SET_ACTIVE_WORKSPACE': return await setActiveWorkspace(msg.workspace);
+    case 'CREATE_WORKSPACE': return await createWorkspace(msg.workspace);
+    case 'DELETE_WORKSPACE': return await deleteWorkspace(msg.id);
+    case 'SHARE_CLIP': return await shareClip(msg.id);
+    case 'EXPORT_DATA': return await exportData();
+    case 'IMPORT_DATA': return await importData(msg.data);
+    case 'GET_CATEGORIES': return await getCategories();
+    case 'INCREMENT_COPY': return await incrementCopy(msg.id);
+    case 'CHECK_STORAGE': return await checkStorage();
+    default: return { success: false, error: 'Unknown: ' + msg.type };
   }
 }
 
-// Core functions
-async function saveClip(clipData) {
-  try {
-    if (!clipData?.content) {
-      return { success: false, error: 'No content provided' };
-    }
-    
-    const content = clipData.content.trim();
-    if (!content) {
-      return { success: false, error: 'Empty content' };
-    }
-    
-    console.log('ClipStash: Saving clip, length:', content.length);
-    
-    const settings = await getSettings();
-    const result = await chrome.storage.local.get([STORAGE_KEY, STATS_KEY]);
-    let history = result[STORAGE_KEY] || [];
-    let stats = { ...DEFAULT_STATS, ...result[STATS_KEY] };
-    
-    // Check excluded sites
-    const hostname = clipData.source?.hostname || '';
-    if (hostname && settings.excludedSites?.includes(hostname)) {
-      console.log('ClipStash: Site excluded:', hostname);
-      return { success: true, excluded: true };
-    }
-    
-    // Check for duplicates (exact match)
-    const existingIndex = history.findIndex(c => c.content === content);
-    if (existingIndex !== -1) {
-      // Move to top and update timestamp
-      const existing = history.splice(existingIndex, 1)[0];
-      existing.timestamp = Date.now();
-      existing.source = clipData.source || existing.source;
-      history.unshift(existing);
-      
-      await chrome.storage.local.set({ [STORAGE_KEY]: history });
+// Core Functions
+async function saveClip(data) {
+  if (!data?.content) return { success: false, error: 'No content' };
+  
+  const result = await chrome.storage.local.get([STORAGE_KEYS.history, STORAGE_KEYS.stats, STORAGE_KEYS.settings, STORAGE_KEYS.activeWorkspace]);
+  let history = result[STORAGE_KEYS.history] || [];
+  let stats = { ...DEFAULT_STATS, ...result[STORAGE_KEYS.stats] };
+  const settings = { ...DEFAULT_SETTINGS, ...result[STORAGE_KEYS.settings] };
+  const activeWorkspace = result[STORAGE_KEYS.activeWorkspace] || 'default';
+  
+  // Check excluded sites
+  if (data.source?.hostname && settings.excludedSites?.includes(data.source.hostname)) {
+    return { success: true, excluded: true };
+  }
+  
+  // Check duplicates (for non-images)
+  if (data.type !== 'image') {
+    const existing = history.findIndex(c => c.content === data.content);
+    if (existing !== -1) {
+      const clip = history.splice(existing, 1)[0];
+      clip.timestamp = Date.now();
+      clip.source = data.source || clip.source;
+      history.unshift(clip);
+      await chrome.storage.local.set({ [STORAGE_KEYS.history]: history });
       updateBadge();
       updateContextMenuClips();
-      
-      console.log('ClipStash: Duplicate moved to top');
       return { success: true, duplicate: true };
     }
-    
-    // Detect sensitive content
-    const isSensitive = settings.detectSensitive && detectSensitiveContent(content);
-    
-    // Create new clip
-    const newClip = {
-      id: `clip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      content: content,
-      type: clipData.type || 'text',
-      timestamp: Date.now(),
-      source: clipData.source || { hostname: 'unknown' },
-      pinned: false,
-      category: null,
-      copyCount: 0,
-      isSensitive
-    };
-    
-    // Add to beginning
-    history.unshift(newClip);
-    stats.totalClipsSaved++;
-    
-    // Enforce max size (keep pinned items)
-    const maxSize = settings.maxHistorySize || MAX_HISTORY_SIZE;
-    const pinned = history.filter(c => c.pinned);
-    const unpinned = history.filter(c => !c.pinned);
-    
-    if (unpinned.length > maxSize) {
-      history = [...pinned, ...unpinned.slice(0, maxSize)];
-    }
-    
-    // Save
-    await chrome.storage.local.set({ 
-      [STORAGE_KEY]: history,
-      [STATS_KEY]: stats
-    });
-    
-    updateBadge();
-    updateContextMenuClips();
-    
-    console.log('ClipStash: Saved! Total clips:', history.length);
-    return { success: true, clip: newClip };
-    
-  } catch (error) {
-    console.error('ClipStash: Save error:', error);
-    return { success: false, error: error.message };
   }
+  
+  const clip = {
+    id: `clip_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    content: data.content,
+    html: data.html || null,
+    type: data.type || 'text',
+    mimeType: data.mimeType || null,
+    timestamp: Date.now(),
+    source: data.source || { hostname: 'unknown' },
+    pinned: false,
+    category: null,
+    workspace: activeWorkspace,
+    note: null,
+    copyCount: 0,
+    isSensitive: settings.detectSensitive && data.type === 'text' && detectSensitive(data.content)
+  };
+  
+  history.unshift(clip);
+  stats.totalClipsSaved++;
+  if (data.type === 'image') stats.totalImagesSaved++;
+  
+  // Enforce max size
+  const maxSize = settings.maxHistorySize || 200;
+  const pinned = history.filter(c => c.pinned);
+  const unpinned = history.filter(c => !c.pinned);
+  if (unpinned.length > maxSize) {
+    history = [...pinned, ...unpinned.slice(0, maxSize)];
+  }
+  
+  await chrome.storage.local.set({ [STORAGE_KEYS.history]: history, [STORAGE_KEYS.stats]: stats });
+  updateBadge();
+  updateContextMenuClips();
+  
+  return { success: true, clip };
 }
 
 async function getHistory(filters = {}) {
-  try {
-    const result = await chrome.storage.local.get(STORAGE_KEY);
-    let history = result[STORAGE_KEY] || [];
-    
-    // Apply filters
-    if (filters.type && filters.type !== 'all') {
-      history = history.filter(c => c.type === filters.type);
-    }
-    if (filters.category) {
-      history = history.filter(c => c.category === filters.category);
-    }
-    if (filters.pinned) {
-      history = history.filter(c => c.pinned);
-    }
-    if (filters.search) {
-      const query = filters.search.toLowerCase();
-      history = history.filter(c => c.content.toLowerCase().includes(query));
-    }
-    
-    return { success: true, history };
-  } catch (error) {
-    return { success: false, error: error.message, history: [] };
+  const result = await chrome.storage.local.get([STORAGE_KEYS.history, STORAGE_KEYS.activeWorkspace]);
+  let history = result[STORAGE_KEYS.history] || [];
+  const activeWorkspace = result[STORAGE_KEYS.activeWorkspace] || 'default';
+  
+  // Filter by workspace unless 'all' requested
+  if (filters.workspace !== 'all') {
+    const ws = filters.workspace || activeWorkspace;
+    history = history.filter(c => !c.workspace || c.workspace === ws);
   }
+  
+  if (filters.type && filters.type !== 'all') history = history.filter(c => c.type === filters.type);
+  if (filters.category) history = history.filter(c => c.category === filters.category);
+  if (filters.pinned) history = history.filter(c => c.pinned);
+  if (filters.source) history = history.filter(c => c.source?.hostname === filters.source);
+  if (filters.search) {
+    const q = filters.search.toLowerCase();
+    history = history.filter(c => c.type !== 'image' && c.content.toLowerCase().includes(q));
+  }
+  
+  return { success: true, history };
 }
 
-async function deleteClip(clipId) {
-  try {
-    const result = await chrome.storage.local.get(STORAGE_KEY);
-    let history = result[STORAGE_KEY] || [];
-    history = history.filter(c => c.id !== clipId);
-    await chrome.storage.local.set({ [STORAGE_KEY]: history });
-    updateBadge();
-    updateContextMenuClips();
-    return { success: true };
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
+async function deleteClip(id) {
+  const result = await chrome.storage.local.get(STORAGE_KEYS.history);
+  const history = (result[STORAGE_KEYS.history] || []).filter(c => c.id !== id);
+  await chrome.storage.local.set({ [STORAGE_KEYS.history]: history });
+  updateBadge();
+  updateContextMenuClips();
+  return { success: true };
 }
 
 async function clearHistory() {
-  try {
-    await chrome.storage.local.set({ [STORAGE_KEY]: [] });
-    updateBadge();
-    updateContextMenuClips();
-    return { success: true };
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
+  await chrome.storage.local.set({ [STORAGE_KEYS.history]: [] });
+  updateBadge();
+  updateContextMenuClips();
+  return { success: true };
 }
 
-async function togglePin(clipId) {
-  try {
-    const result = await chrome.storage.local.get(STORAGE_KEY);
-    let history = result[STORAGE_KEY] || [];
-    const clip = history.find(c => c.id === clipId);
-    
-    if (clip) {
-      clip.pinned = !clip.pinned;
-      await chrome.storage.local.set({ [STORAGE_KEY]: history });
-      return { success: true, pinned: clip.pinned };
-    }
-    return { success: false, error: 'Clip not found' };
-  } catch (error) {
-    return { success: false, error: error.message };
+async function togglePin(id) {
+  const result = await chrome.storage.local.get(STORAGE_KEYS.history);
+  const history = result[STORAGE_KEYS.history] || [];
+  const clip = history.find(c => c.id === id);
+  if (clip) {
+    clip.pinned = !clip.pinned;
+    await chrome.storage.local.set({ [STORAGE_KEYS.history]: history });
+    return { success: true, pinned: clip.pinned };
   }
+  return { success: false, error: 'Not found' };
+}
+
+async function editClip(id, content) {
+  const result = await chrome.storage.local.get(STORAGE_KEYS.history);
+  const history = result[STORAGE_KEYS.history] || [];
+  const clip = history.find(c => c.id === id);
+  if (clip && clip.type !== 'image') {
+    clip.content = content;
+    clip.editedAt = Date.now();
+    await chrome.storage.local.set({ [STORAGE_KEYS.history]: history });
+    return { success: true };
+  }
+  return { success: false, error: 'Not found or is image' };
+}
+
+async function mergeClips(ids, separator = '\n') {
+  const result = await chrome.storage.local.get(STORAGE_KEYS.history);
+  const history = result[STORAGE_KEYS.history] || [];
+  const clips = ids.map(id => history.find(c => c.id === id)).filter(c => c && c.type !== 'image');
+  
+  if (clips.length < 2) return { success: false, error: 'Need at least 2 text clips' };
+  
+  const merged = clips.map(c => c.content).join(separator);
+  return await saveClip({ content: merged, type: 'text', source: { hostname: 'merged' } });
+}
+
+async function setNote(id, note) {
+  const result = await chrome.storage.local.get(STORAGE_KEYS.history);
+  const history = result[STORAGE_KEYS.history] || [];
+  const clip = history.find(c => c.id === id);
+  if (clip) {
+    clip.note = note || null;
+    await chrome.storage.local.set({ [STORAGE_KEYS.history]: history });
+    return { success: true };
+  }
+  return { success: false, error: 'Not found' };
+}
+
+async function setCategory(id, category) {
+  const result = await chrome.storage.local.get(STORAGE_KEYS.history);
+  const history = result[STORAGE_KEYS.history] || [];
+  const clip = history.find(c => c.id === id);
+  if (clip) {
+    clip.category = category || null;
+    await chrome.storage.local.set({ [STORAGE_KEYS.history]: history });
+    return { success: true };
+  }
+  return { success: false, error: 'Not found' };
+}
+
+async function setWorkspace(id, workspace) {
+  const result = await chrome.storage.local.get(STORAGE_KEYS.history);
+  const history = result[STORAGE_KEYS.history] || [];
+  const clip = history.find(c => c.id === id);
+  if (clip) {
+    clip.workspace = workspace;
+    await chrome.storage.local.set({ [STORAGE_KEYS.history]: history });
+    return { success: true };
+  }
+  return { success: false, error: 'Not found' };
 }
 
 async function getSettings() {
-  const result = await chrome.storage.local.get(SETTINGS_KEY);
-  return { ...DEFAULT_SETTINGS, ...result[SETTINGS_KEY] };
+  const result = await chrome.storage.local.get(STORAGE_KEYS.settings);
+  return { ...DEFAULT_SETTINGS, ...result[STORAGE_KEYS.settings] };
 }
 
 async function saveSettings(settings) {
-  try {
-    await chrome.storage.local.set({ [SETTINGS_KEY]: settings });
-    return { success: true };
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
+  await chrome.storage.local.set({ [STORAGE_KEYS.settings]: settings });
+  return { success: true };
 }
 
 async function getStats() {
-  const result = await chrome.storage.local.get(STATS_KEY);
-  return { success: true, stats: { ...DEFAULT_STATS, ...result[STATS_KEY] } };
+  const result = await chrome.storage.local.get(STORAGE_KEYS.stats);
+  return { success: true, stats: { ...DEFAULT_STATS, ...result[STORAGE_KEYS.stats] } };
 }
 
-async function incrementCopyCount(clipId) {
-  try {
-    const result = await chrome.storage.local.get([STORAGE_KEY, STATS_KEY]);
-    let history = result[STORAGE_KEY] || [];
-    let stats = { ...DEFAULT_STATS, ...result[STATS_KEY] };
-    
-    const clip = history.find(c => c.id === clipId);
-    if (clip) {
-      clip.copyCount = (clip.copyCount || 0) + 1;
-      stats.totalCopiesFromHistory++;
-      await chrome.storage.local.set({ [STORAGE_KEY]: history, [STATS_KEY]: stats });
-    }
-    return { success: true };
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
+async function getTemplates() {
+  const result = await chrome.storage.local.get(STORAGE_KEYS.templates);
+  return { success: true, templates: result[STORAGE_KEYS.templates] || [] };
 }
 
-async function setCategory(clipId, category) {
-  try {
-    const result = await chrome.storage.local.get(STORAGE_KEY);
-    let history = result[STORAGE_KEY] || [];
-    const clip = history.find(c => c.id === clipId);
-    
-    if (clip) {
-      clip.category = category || null;
-      await chrome.storage.local.set({ [STORAGE_KEY]: history });
-      return { success: true };
-    }
-    return { success: false, error: 'Clip not found' };
-  } catch (error) {
-    return { success: false, error: error.message };
+async function saveTemplate(template) {
+  const result = await chrome.storage.local.get(STORAGE_KEYS.templates);
+  const templates = result[STORAGE_KEYS.templates] || [];
+  
+  if (template.id) {
+    const idx = templates.findIndex(t => t.id === template.id);
+    if (idx !== -1) templates[idx] = template;
+    else templates.push(template);
+  } else {
+    template.id = `tpl_${Date.now()}`;
+    templates.push(template);
   }
+  
+  await chrome.storage.local.set({ [STORAGE_KEYS.templates]: templates });
+  return { success: true, template };
 }
 
-async function getCategories() {
-  try {
-    const result = await chrome.storage.local.get(STORAGE_KEY);
-    const history = result[STORAGE_KEY] || [];
-    const categories = [...new Set(history.map(c => c.category).filter(Boolean))];
-    return { success: true, categories };
-  } catch (error) {
-    return { success: false, error: error.message, categories: [] };
+async function deleteTemplate(id) {
+  const result = await chrome.storage.local.get(STORAGE_KEYS.templates);
+  const templates = (result[STORAGE_KEYS.templates] || []).filter(t => t.id !== id);
+  await chrome.storage.local.set({ [STORAGE_KEYS.templates]: templates });
+  return { success: true };
+}
+
+async function getWorkspaces() {
+  const result = await chrome.storage.local.get([STORAGE_KEYS.workspaces, STORAGE_KEYS.activeWorkspace]);
+  return {
+    success: true,
+    workspaces: result[STORAGE_KEYS.workspaces] || DEFAULT_WORKSPACES,
+    active: result[STORAGE_KEYS.activeWorkspace] || 'default'
+  };
+}
+
+async function setActiveWorkspace(workspace) {
+  await chrome.storage.local.set({ [STORAGE_KEYS.activeWorkspace]: workspace });
+  return { success: true };
+}
+
+async function createWorkspace(workspace) {
+  const result = await chrome.storage.local.get(STORAGE_KEYS.workspaces);
+  const workspaces = result[STORAGE_KEYS.workspaces] || DEFAULT_WORKSPACES;
+  workspace.id = `ws_${Date.now()}`;
+  workspaces.push(workspace);
+  await chrome.storage.local.set({ [STORAGE_KEYS.workspaces]: workspaces });
+  return { success: true, workspace };
+}
+
+async function deleteWorkspace(id) {
+  if (id === 'default') return { success: false, error: 'Cannot delete default' };
+  const result = await chrome.storage.local.get(STORAGE_KEYS.workspaces);
+  const workspaces = (result[STORAGE_KEYS.workspaces] || []).filter(w => w.id !== id);
+  await chrome.storage.local.set({ [STORAGE_KEYS.workspaces]: workspaces });
+  return { success: true };
+}
+
+async function shareClip(id) {
+  const result = await chrome.storage.local.get(STORAGE_KEYS.history);
+  const clip = (result[STORAGE_KEYS.history] || []).find(c => c.id === id);
+  
+  if (!clip || clip.type === 'image') {
+    return { success: false, error: 'Cannot share images or not found' };
   }
+  
+  // Create a simple share URL using a free paste service simulation
+  const encoded = btoa(encodeURIComponent(clip.content));
+  const shareUrl = `data:text/html,<pre>${encodeURIComponent(clip.content)}</pre>`;
+  
+  return { success: true, shareUrl, content: clip.content };
 }
 
 async function exportData() {
-  try {
-    const result = await chrome.storage.local.get([STORAGE_KEY, SETTINGS_KEY, STATS_KEY]);
-    return {
-      success: true,
-      data: {
-        history: result[STORAGE_KEY] || [],
-        settings: result[SETTINGS_KEY] || DEFAULT_SETTINGS,
-        stats: result[STATS_KEY] || DEFAULT_STATS,
-        exportDate: new Date().toISOString(),
-        version: '1.2.0'
-      }
-    };
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
+  const result = await chrome.storage.local.get(Object.values(STORAGE_KEYS));
+  return {
+    success: true,
+    data: {
+      history: result[STORAGE_KEYS.history] || [],
+      settings: result[STORAGE_KEYS.settings] || DEFAULT_SETTINGS,
+      stats: result[STORAGE_KEYS.stats] || DEFAULT_STATS,
+      templates: result[STORAGE_KEYS.templates] || [],
+      workspaces: result[STORAGE_KEYS.workspaces] || DEFAULT_WORKSPACES,
+      exportDate: new Date().toISOString(),
+      version: '2.0.0'
+    }
+  };
 }
 
 async function importData(data) {
-  try {
-    if (data.history) await chrome.storage.local.set({ [STORAGE_KEY]: data.history });
-    if (data.settings) await chrome.storage.local.set({ [SETTINGS_KEY]: data.settings });
-    if (data.stats) await chrome.storage.local.set({ [STATS_KEY]: data.stats });
-    
-    updateBadge();
-    updateContextMenuClips();
-    return { success: true, imported: data.history?.length || 0 };
-  } catch (error) {
-    return { success: false, error: error.message };
-  }
+  const updates = {};
+  if (data.history) updates[STORAGE_KEYS.history] = data.history;
+  if (data.settings) updates[STORAGE_KEYS.settings] = data.settings;
+  if (data.stats) updates[STORAGE_KEYS.stats] = data.stats;
+  if (data.templates) updates[STORAGE_KEYS.templates] = data.templates;
+  if (data.workspaces) updates[STORAGE_KEYS.workspaces] = data.workspaces;
+  
+  await chrome.storage.local.set(updates);
+  updateBadge();
+  updateContextMenuClips();
+  return { success: true, imported: data.history?.length || 0 };
 }
 
-async function checkStorageQuota() {
-  try {
-    const bytesInUse = await chrome.storage.local.getBytesInUse();
-    const quota = chrome.storage.local.QUOTA_BYTES || 5242880;
-    const percentUsed = (bytesInUse / quota) * 100;
-    return {
-      success: true,
-      bytesInUse,
-      quota,
-      percentUsed: percentUsed.toFixed(1),
-      warning: percentUsed > 80
-    };
-  } catch (error) {
-    return { success: false, error: error.message };
+async function getCategories() {
+  const result = await chrome.storage.local.get(STORAGE_KEYS.history);
+  const cats = [...new Set((result[STORAGE_KEYS.history] || []).map(c => c.category).filter(Boolean))];
+  return { success: true, categories: cats };
+}
+
+async function incrementCopy(id) {
+  const result = await chrome.storage.local.get([STORAGE_KEYS.history, STORAGE_KEYS.stats]);
+  const history = result[STORAGE_KEYS.history] || [];
+  let stats = { ...DEFAULT_STATS, ...result[STORAGE_KEYS.stats] };
+  
+  const clip = history.find(c => c.id === id);
+  if (clip) {
+    clip.copyCount = (clip.copyCount || 0) + 1;
+    stats.totalCopiesFromHistory++;
+    await chrome.storage.local.set({ [STORAGE_KEYS.history]: history, [STORAGE_KEYS.stats]: stats });
   }
+  return { success: true };
+}
+
+async function checkStorage() {
+  const bytes = await chrome.storage.local.getBytesInUse();
+  const quota = chrome.storage.local.QUOTA_BYTES || 5242880;
+  return { success: true, bytesInUse: bytes, quota, percentUsed: ((bytes / quota) * 100).toFixed(1) };
 }
 
 async function updateBadge() {
   try {
-    const result = await chrome.storage.local.get(STORAGE_KEY);
-    const count = (result[STORAGE_KEY] || []).length;
+    const result = await chrome.storage.local.get(STORAGE_KEYS.history);
+    const count = (result[STORAGE_KEYS.history] || []).length;
     await chrome.action.setBadgeText({ text: count > 0 ? count.toString() : '' });
     await chrome.action.setBadgeBackgroundColor({ color: '#5b3fd4' });
-  } catch (error) {
-    // Badge update failed - not critical
-  }
+  } catch (e) {}
 }
 
-function detectContentType(content) {
-  if (/^https?:\/\/\S+$/i.test(content)) return 'url';
-  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(content)) return 'email';
-  if (/^[\d\s\-\+\(\)\.]+$/.test(content) && content.replace(/\D/g, '').length >= 7) return 'phone';
-  
-  const codePatterns = [
-    /^(function|const|let|var|import|export|class|def|public|private)\s/m,
-    /^(SELECT|INSERT|UPDATE|DELETE|CREATE)\s/i,
-    /[{}\[\]();].*\n.*[{}\[\]();]/,
-  ];
-  if (codePatterns.some(p => p.test(content))) return 'code';
-  
+function detectType(text) {
+  if (/^https?:\/\/\S+$/i.test(text)) return 'url';
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) return 'email';
+  if (/^[\d\s\-\+\(\)\.]+$/.test(text) && text.replace(/\D/g, '').length >= 7) return 'phone';
+  if (/[{}\[\]();]/.test(text) || /^(const|let|var|function|import|def|class|SELECT)\s/mi.test(text)) return 'code';
   return 'text';
 }
 
-function detectSensitiveContent(content) {
-  return SENSITIVE_PATTERNS.some(pattern => pattern.test(content));
+function detectSensitive(text) {
+  return SENSITIVE_PATTERNS.some(p => p.test(text));
 }
 
-function escapeXml(str) {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
-
-console.log('ClipStash: Service worker loaded');
+console.log('ClipStash v2.0 loaded');

@@ -1,521 +1,462 @@
-// ClipStash - Popup Logic
-// Handles UI interactions and communicates with background worker
+// ClipStash v2.0 - Popup Logic
+
+let clips = [];
+let workspaces = [];
+let templates = [];
+let activeWorkspace = 'default';
+let currentTab = 'all';
+let searchQuery = '';
+let typeFilter = 'all';
+let selectedClips = new Set();
+let editingClipId = null;
+let noteClipId = null;
+let selectedEmoji = '📋';
 
 document.addEventListener('DOMContentLoaded', init);
 
-let allClips = [];
-let filteredClips = [];
-let currentTab = 'all';
-let searchQuery = '';
-let selectedIndex = -1;
-let filters = {
-  type: 'all',
-  category: '',
-  date: 'all'
-};
-
 async function init() {
+  await loadWorkspaces();
   await loadClips();
-  await loadCategories();
-  setupEventListeners();
-  setupKeyboardNavigation();
+  await loadTemplates();
+  setupListeners();
 }
 
-function setupEventListeners() {
-  // Search toggle
-  document.getElementById('searchToggle').addEventListener('click', toggleSearch);
-  document.getElementById('searchInput').addEventListener('input', handleSearch);
+function setupListeners() {
+  // Search
+  document.getElementById('searchBtn').addEventListener('click', toggleSearch);
+  document.getElementById('searchInput').addEventListener('input', e => { searchQuery = e.target.value; renderClips(); });
+  document.getElementById('typeFilter').addEventListener('change', e => { typeFilter = e.target.value; renderClips(); });
   
-  // Filter toggle
-  document.getElementById('filterToggle').addEventListener('click', toggleFilters);
-  document.getElementById('typeFilter').addEventListener('change', handleFilterChange);
-  document.getElementById('categoryFilter').addEventListener('change', handleFilterChange);
-  document.getElementById('dateFilter').addEventListener('change', handleFilterChange);
-  
-  // Settings
-  document.getElementById('settingsBtn').addEventListener('click', openSettings);
-  
-  // Clear all
-  document.getElementById('clearAll').addEventListener('click', confirmClearAll);
+  // Buttons
+  document.getElementById('templatesBtn').addEventListener('click', () => openModal('templatesModal'));
+  document.getElementById('settingsBtn').addEventListener('click', () => chrome.runtime.openOptionsPage());
+  document.getElementById('addWorkspaceBtn').addEventListener('click', () => openModal('workspaceModal'));
+  document.getElementById('clearBtn').addEventListener('click', clearAll);
+  document.getElementById('mergeBtn').addEventListener('click', mergeSelected);
   
   // Tabs
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => switchTab(tab.dataset.tab));
   });
   
-  // Category modal
-  document.getElementById('cancelCategory').addEventListener('click', closeCategoryModal);
-  document.getElementById('saveCategory').addEventListener('click', saveCategory);
+  // Modals
+  document.getElementById('saveEditBtn').addEventListener('click', saveEdit);
+  document.getElementById('saveNoteBtn').addEventListener('click', saveNote);
+  document.getElementById('saveTemplateBtn').addEventListener('click', saveTemplate);
+  document.getElementById('createWorkspaceBtn').addEventListener('click', createWorkspace);
+  
+  // Emoji picker
+  document.querySelectorAll('.emoji-picker span').forEach(span => {
+    span.addEventListener('click', () => {
+      document.querySelectorAll('.emoji-picker span').forEach(s => s.classList.remove('selected'));
+      span.classList.add('selected');
+      selectedEmoji = span.dataset.emoji;
+    });
+  });
+  
+  // Keyboard
+  document.addEventListener('keydown', handleKeyboard);
 }
 
-function setupKeyboardNavigation() {
-  document.addEventListener('keydown', (e) => {
-    // Focus search with /
-    if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
-      e.preventDefault();
-      toggleSearch();
-      setTimeout(() => document.getElementById('searchInput').focus(), 100);
-      return;
-    }
-    
-    // Escape to close search/filters
-    if (e.key === 'Escape') {
-      const searchBar = document.getElementById('searchBar');
-      const filterBar = document.getElementById('filterBar');
-      if (searchBar.classList.contains('active')) {
-        toggleSearch();
-      }
-      if (filterBar.classList.contains('active')) {
-        toggleFilters();
-      }
-      selectedIndex = -1;
-      renderClips();
-      return;
-    }
-    
-    // Arrow navigation
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      e.preventDefault();
-      const clips = document.querySelectorAll('.clip-item');
-      if (clips.length === 0) return;
-      
-      if (e.key === 'ArrowDown') {
-        selectedIndex = Math.min(selectedIndex + 1, clips.length - 1);
-      } else {
-        selectedIndex = Math.max(selectedIndex - 1, 0);
-      }
-      
-      updateSelection(clips);
-    }
-    
-    // Enter to copy selected
-    if (e.key === 'Enter' && selectedIndex >= 0) {
-      e.preventDefault();
-      const clipId = filteredClips[selectedIndex]?.id;
-      if (clipId) {
-        copyToClipboard(clipId);
-      }
-    }
-    
-    // Number keys for quick copy (Alt+1, Alt+2, Alt+3)
-    if (e.altKey && e.key >= '1' && e.key <= '9') {
-      e.preventDefault();
-      const index = parseInt(e.key) - 1;
-      if (filteredClips[index]) {
-        copyToClipboard(filteredClips[index].id);
-      }
-    }
-  });
-}
-
-function updateSelection(clips) {
-  clips.forEach((clip, index) => {
-    clip.classList.toggle('selected', index === selectedIndex);
-    if (index === selectedIndex) {
-      clip.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-    }
-  });
+async function loadWorkspaces() {
+  const res = await chrome.runtime.sendMessage({ type: 'GET_WORKSPACES' });
+  if (res.success) {
+    workspaces = res.workspaces;
+    activeWorkspace = res.active;
+    renderWorkspaces();
+  }
 }
 
 async function loadClips() {
-  const response = await chrome.runtime.sendMessage({ type: 'GET_HISTORY' });
+  const filters = { workspace: activeWorkspace };
+  if (currentTab === 'pinned') filters.pinned = true;
+  if (currentTab === 'images') filters.type = 'image';
   
-  if (response.success) {
-    allClips = response.history;
-    applyFilters();
+  const res = await chrome.runtime.sendMessage({ type: 'GET_HISTORY', filters });
+  if (res.success) {
+    clips = res.history;
+    renderClips();
   }
 }
 
-async function loadCategories() {
-  const response = await chrome.runtime.sendMessage({ type: 'GET_CATEGORIES' });
-  
-  if (response.success && response.categories.length > 0) {
-    const select = document.getElementById('categoryFilter');
-    const datalist = document.getElementById('categoryList');
-    
-    // Clear existing options (except first)
-    while (select.options.length > 1) {
-      select.remove(1);
-    }
-    datalist.innerHTML = '';
-    
-    response.categories.forEach(cat => {
-      const option = document.createElement('option');
-      option.value = cat;
-      option.textContent = cat;
-      select.appendChild(option);
-      
-      const dataOption = document.createElement('option');
-      dataOption.value = cat;
-      datalist.appendChild(dataOption);
-    });
+async function loadTemplates() {
+  const res = await chrome.runtime.sendMessage({ type: 'GET_TEMPLATES' });
+  if (res.success) {
+    templates = res.templates;
+    renderTemplates();
   }
 }
 
-function applyFilters() {
-  filteredClips = [...allClips];
+function renderWorkspaces() {
+  const container = document.getElementById('workspaces');
+  container.innerHTML = workspaces.map(ws => `
+    <button class="workspace-btn ${ws.id === activeWorkspace ? 'active' : ''}" data-id="${ws.id}">
+      ${ws.icon} ${ws.name}
+    </button>
+  `).join('');
   
-  // Tab filter
-  if (currentTab === 'pinned') {
-    filteredClips = filteredClips.filter(clip => clip.pinned);
-  }
-  
-  // Search filter
-  if (searchQuery) {
-    const query = searchQuery.toLowerCase();
-    filteredClips = filteredClips.filter(clip => 
-      clip.content.toLowerCase().includes(query)
-    );
-  }
-  
-  // Type filter
-  if (filters.type !== 'all') {
-    filteredClips = filteredClips.filter(clip => clip.type === filters.type);
-  }
-  
-  // Category filter
-  if (filters.category) {
-    filteredClips = filteredClips.filter(clip => clip.category === filters.category);
-  }
-  
-  // Date filter
-  if (filters.date !== 'all') {
-    const now = Date.now();
-    let cutoff;
-    switch (filters.date) {
-      case 'today':
-        cutoff = now - 24 * 60 * 60 * 1000;
-        break;
-      case 'week':
-        cutoff = now - 7 * 24 * 60 * 60 * 1000;
-        break;
-      case 'month':
-        cutoff = now - 30 * 24 * 60 * 60 * 1000;
-        break;
-    }
-    if (cutoff) {
-      filteredClips = filteredClips.filter(clip => clip.timestamp >= cutoff);
-    }
-  }
-  
-  selectedIndex = -1;
-  renderClips();
+  container.querySelectorAll('.workspace-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchWorkspace(btn.dataset.id));
+  });
 }
 
 function renderClips() {
+  let filtered = [...clips];
+  
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    filtered = filtered.filter(c => c.type !== 'image' && c.content.toLowerCase().includes(q));
+  }
+  
+  if (typeFilter !== 'all') {
+    filtered = filtered.filter(c => c.type === typeFilter);
+  }
+  
   const container = document.getElementById('clipsList');
-  const emptyState = document.getElementById('emptyState');
-  const countEl = document.getElementById('clipCount');
+  const empty = document.getElementById('emptyState');
+  const count = document.getElementById('clipCount');
   
-  // Update count
-  countEl.textContent = `${allClips.length} clip${allClips.length !== 1 ? 's' : ''}`;
+  count.textContent = `${clips.length} clip${clips.length !== 1 ? 's' : ''}`;
   
-  // Show/hide empty state
-  if (filteredClips.length === 0) {
-    emptyState.classList.remove('hidden');
+  if (filtered.length === 0) {
+    empty.classList.remove('hidden');
     container.innerHTML = '';
     return;
   }
   
-  emptyState.classList.add('hidden');
+  empty.classList.add('hidden');
+  container.innerHTML = filtered.map(clip => createClipHtml(clip)).join('');
   
-  // Render clips
-  container.innerHTML = filteredClips.map((clip, index) => createClipElement(clip, index)).join('');
-  
-  // Add event listeners
-  container.querySelectorAll('.clip-item').forEach((item, index) => {
-    const clipId = item.dataset.id;
-    
-    // Click to copy
-    item.addEventListener('click', (e) => {
-      if (!e.target.closest('.clip-actions') && !e.target.closest('.expand-btn')) {
-        copyToClipboard(clipId);
+  // Event listeners
+  container.querySelectorAll('.clip-item').forEach(item => {
+    const id = item.dataset.id;
+    item.addEventListener('click', e => {
+      if (!e.target.closest('.clip-actions') && !e.target.closest('.clip-checkbox')) {
+        copyClip(id);
       }
     });
     
-    // Pin button
-    item.querySelector('.pin-btn')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      togglePin(clipId);
-    });
-    
-    // Delete button
-    item.querySelector('.delete-btn')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      deleteClip(clipId);
-    });
-    
-    // Category button
-    item.querySelector('.category-btn')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      openCategoryModal(clipId);
-    });
-    
-    // Expand button
-    item.querySelector('.expand-btn')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleExpand(item, e.target);
-    });
+    item.querySelector('.pin-btn')?.addEventListener('click', e => { e.stopPropagation(); togglePin(id); });
+    item.querySelector('.edit-btn')?.addEventListener('click', e => { e.stopPropagation(); openEdit(id); });
+    item.querySelector('.note-btn')?.addEventListener('click', e => { e.stopPropagation(); openNote(id); });
+    item.querySelector('.share-btn')?.addEventListener('click', e => { e.stopPropagation(); shareClip(id); });
+    item.querySelector('.delete-btn')?.addEventListener('click', e => { e.stopPropagation(); deleteClip(id); });
   });
+  
+  updateMergeButton();
 }
 
-function createClipElement(clip, index) {
+function createClipHtml(clip) {
   const time = formatTime(clip.timestamp);
-  const typeClass = clip.type !== 'text' ? clip.type : '';
-  const isLong = clip.content.length > 200 || clip.content.split('\n').length > 3;
-  const isSelected = index === selectedIndex;
+  const isImage = clip.type === 'image';
   
-  let content = escapeHtml(clip.content);
-  
-  // Apply syntax highlighting for code
-  if (clip.type === 'code') {
-    content = highlightSyntax(content);
+  let content;
+  if (isImage) {
+    content = `<img class="clip-image" src="${clip.content}" alt="Image">`;
+  } else {
+    const escaped = escapeHtml(clip.content);
+    content = `<div class="clip-content ${clip.type}">${escaped}</div>`;
   }
   
-  const source = clip.source?.hostname || '';
-  
   return `
-    <div class="clip-item ${clip.pinned ? 'pinned' : ''} ${clip.isSensitive ? 'sensitive' : ''} ${isSelected ? 'selected' : ''}" data-id="${clip.id}">
-      <div class="clip-content ${typeClass} ${isLong ? 'collapsed' : ''}">${content}</div>
-      ${isLong ? '<button class="expand-btn">Show more</button>' : ''}
+    <div class="clip-item ${clip.pinned ? 'pinned' : ''} ${clip.isSensitive ? 'sensitive' : ''} ${selectedClips.has(clip.id) ? 'selected' : ''}" data-id="${clip.id}">
+      <input type="checkbox" class="clip-checkbox" ${selectedClips.has(clip.id) ? 'checked' : ''} onclick="toggleSelect('${clip.id}', event)">
+      ${content}
+      ${clip.note ? `<div class="clip-note">📝 ${escapeHtml(clip.note)}</div>` : ''}
       <div class="clip-meta">
         <div class="clip-info">
-          <span class="clip-type ${typeClass}">${clip.type}</span>
-          ${clip.category ? `<span class="clip-category">${escapeHtml(clip.category)}</span>` : ''}
-          ${clip.isSensitive ? '<span class="sensitive-badge">⚠️ Sensitive</span>' : ''}
+          <span class="clip-type ${clip.type}">${clip.type}</span>
           <span class="clip-time">${time}</span>
-          ${clip.copyCount > 0 ? `<span class="copy-count"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>${clip.copyCount}</span>` : ''}
+          ${clip.copyCount ? `<span class="clip-time">📋 ${clip.copyCount}</span>` : ''}
         </div>
         <div class="clip-actions">
-          <button class="category-btn" title="Set category">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/>
-              <line x1="7" y1="7" x2="7.01" y2="7"/>
-            </svg>
-          </button>
-          <button class="pin-btn ${clip.pinned ? 'active' : ''}" title="${clip.pinned ? 'Unpin' : 'Pin'}">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="${clip.pinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2">
-              <path d="M12 17v5M9 10.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6a3 3 0 00-3-3 3 3 0 00-3 3v4.76z"/>
-            </svg>
-          </button>
-          <button class="delete-btn" title="Delete">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 6L6 18M6 6l12 12"/>
-            </svg>
-          </button>
+          ${!isImage ? `<button class="edit-btn" title="Edit"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>` : ''}
+          <button class="note-btn" title="Note"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></button>
+          ${!isImage ? `<button class="share-btn" title="Share"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>` : ''}
+          <button class="pin-btn ${clip.pinned ? 'active' : ''}" title="${clip.pinned ? 'Unpin' : 'Pin'}"><svg width="12" height="12" viewBox="0 0 24 24" fill="${clip.pinned ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M12 17v5M9 10.76a2 2 0 01-1.11 1.79l-1.78.9A2 2 0 005 15.24V17h14v-1.76a2 2 0 00-1.11-1.79l-1.78-.9A2 2 0 0115 10.76V6a3 3 0 00-3-3 3 3 0 00-3 3v4.76z"/></svg></button>
+          <button class="delete-btn delete" title="Delete"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
         </div>
       </div>
     </div>
   `;
 }
 
-function highlightSyntax(code) {
-  // Keywords
-  code = code.replace(/\b(const|let|var|function|return|if|else|for|while|class|import|export|from|async|await|new|this|true|false|null|undefined)\b/g, '<span class="keyword">$1</span>');
+function renderTemplates() {
+  const container = document.getElementById('templatesList');
+  if (templates.length === 0) {
+    container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 20px;">No templates yet</p>';
+    return;
+  }
   
-  // Strings (simple single and double quotes)
-  code = code.replace(/(&quot;[^&]*&quot;|&#39;[^&]*&#39;)/g, '<span class="string">$1</span>');
+  container.innerHTML = templates.map(t => `
+    <div class="template-item" data-id="${t.id}">
+      <div>
+        <div class="name">${escapeHtml(t.name)}</div>
+        <div class="preview">${escapeHtml(t.content.substring(0, 40))}...</div>
+      </div>
+      <button class="icon-btn small" onclick="deleteTemplate('${t.id}', event)">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+  `).join('');
   
-  // Numbers
-  code = code.replace(/\b(\d+\.?\d*)\b/g, '<span class="number">$1</span>');
-  
-  // Comments (single line)
-  code = code.replace(/(\/\/.*$)/gm, '<span class="comment">$1</span>');
-  
-  // Operators
-  code = code.replace(/([=+\-*/<>!&|]+)/g, '<span class="operator">$1</span>');
-  
-  return code;
+  container.querySelectorAll('.template-item').forEach(item => {
+    item.addEventListener('click', e => {
+      if (!e.target.closest('button')) {
+        useTemplate(item.dataset.id);
+      }
+    });
+  });
 }
 
-function toggleExpand(item, btn) {
-  const content = item.querySelector('.clip-content');
-  const isCollapsed = content.classList.contains('collapsed');
-  
-  content.classList.toggle('collapsed');
-  btn.textContent = isCollapsed ? 'Show less' : 'Show more';
-}
-
-async function copyToClipboard(clipId) {
-  const clip = allClips.find(c => c.id === clipId);
+// Actions
+async function copyClip(id) {
+  const clip = clips.find(c => c.id === id);
   if (!clip) return;
   
   try {
-    await navigator.clipboard.writeText(clip.content);
-    await chrome.runtime.sendMessage({ type: 'INCREMENT_COPY', id: clipId });
-    showToast('Copied to clipboard!');
-    
-    // Update local copy count
+    if (clip.type === 'image') {
+      // For images, we can only copy the URL
+      await navigator.clipboard.writeText(clip.content);
+    } else {
+      await navigator.clipboard.writeText(clip.content);
+    }
+    await chrome.runtime.sendMessage({ type: 'INCREMENT_COPY', id });
+    showToast('Copied!');
     clip.copyCount = (clip.copyCount || 0) + 1;
     renderClips();
-  } catch (error) {
-    console.error('Failed to copy:', error);
+  } catch (e) {
     showToast('Failed to copy', true);
   }
 }
 
-async function togglePin(clipId) {
-  const response = await chrome.runtime.sendMessage({ 
-    type: 'PIN_CLIP', 
-    id: clipId 
-  });
-  
-  if (response.success) {
-    const clip = allClips.find(c => c.id === clipId);
-    if (clip) {
-      clip.pinned = response.pinned;
-      applyFilters();
-    }
+async function togglePin(id) {
+  const res = await chrome.runtime.sendMessage({ type: 'PIN_CLIP', id });
+  if (res.success) {
+    const clip = clips.find(c => c.id === id);
+    if (clip) clip.pinned = res.pinned;
+    renderClips();
   }
 }
 
-async function deleteClip(clipId) {
-  const response = await chrome.runtime.sendMessage({ 
-    type: 'DELETE_CLIP', 
-    id: clipId 
-  });
-  
-  if (response.success) {
-    allClips = allClips.filter(c => c.id !== clipId);
-    applyFilters();
-  }
+async function deleteClip(id) {
+  await chrome.runtime.sendMessage({ type: 'DELETE_CLIP', id });
+  clips = clips.filter(c => c.id !== id);
+  selectedClips.delete(id);
+  renderClips();
 }
 
-async function confirmClearAll() {
-  if (allClips.length === 0) return;
-  
-  const confirmed = confirm('Clear all clipboard history? Pinned items will also be removed.');
-  if (confirmed) {
-    const response = await chrome.runtime.sendMessage({ type: 'CLEAR_HISTORY' });
-    if (response.success) {
-      allClips = [];
-      applyFilters();
-      showToast('History cleared');
-    }
-  }
+async function clearAll() {
+  if (!confirm('Clear all clips in this workspace?')) return;
+  await chrome.runtime.sendMessage({ type: 'CLEAR_HISTORY' });
+  clips = [];
+  selectedClips.clear();
+  renderClips();
 }
 
-function toggleSearch() {
-  const searchBar = document.getElementById('searchBar');
-  const searchInput = document.getElementById('searchInput');
-  const searchBtn = document.getElementById('searchToggle');
+function openEdit(id) {
+  editingClipId = id;
+  const clip = clips.find(c => c.id === id);
+  document.getElementById('editContent').value = clip?.content || '';
+  openModal('editModal');
+}
+
+async function saveEdit() {
+  const content = document.getElementById('editContent').value.trim();
+  if (!content || !editingClipId) return;
   
-  searchBar.classList.toggle('active');
-  searchBtn.classList.toggle('active');
+  const res = await chrome.runtime.sendMessage({ type: 'EDIT_CLIP', id: editingClipId, content });
+  if (res.success) {
+    const clip = clips.find(c => c.id === editingClipId);
+    if (clip) clip.content = content;
+    renderClips();
+    showToast('Saved!');
+  }
+  closeModal('editModal');
+}
+
+function openNote(id) {
+  noteClipId = id;
+  const clip = clips.find(c => c.id === id);
+  document.getElementById('noteContent').value = clip?.note || '';
+  openModal('noteModal');
+}
+
+async function saveNote() {
+  const note = document.getElementById('noteContent').value.trim();
+  if (!noteClipId) return;
   
-  if (searchBar.classList.contains('active')) {
-    searchInput.focus();
+  const res = await chrome.runtime.sendMessage({ type: 'SET_NOTE', id: noteClipId, note });
+  if (res.success) {
+    const clip = clips.find(c => c.id === noteClipId);
+    if (clip) clip.note = note || null;
+    renderClips();
+    showToast('Note saved!');
+  }
+  closeModal('noteModal');
+}
+
+async function shareClip(id) {
+  const res = await chrome.runtime.sendMessage({ type: 'SHARE_CLIP', id });
+  if (res.success) {
+    await navigator.clipboard.writeText(res.content);
+    showToast('Content copied for sharing!');
   } else {
-    searchInput.value = '';
-    searchQuery = '';
-    applyFilters();
+    showToast(res.error, true);
   }
 }
 
-function toggleFilters() {
-  const filterBar = document.getElementById('filterBar');
-  const filterBtn = document.getElementById('filterToggle');
+// Selection
+window.toggleSelect = function(id, e) {
+  e.stopPropagation();
+  if (selectedClips.has(id)) {
+    selectedClips.delete(id);
+  } else {
+    selectedClips.add(id);
+  }
+  renderClips();
+};
+
+function updateMergeButton() {
+  const btn = document.getElementById('mergeBtn');
+  btn.classList.toggle('hidden', selectedClips.size < 2);
+  if (selectedClips.size >= 2) {
+    btn.textContent = `Merge (${selectedClips.size})`;
+  }
+}
+
+async function mergeSelected() {
+  const ids = Array.from(selectedClips);
+  const res = await chrome.runtime.sendMessage({ type: 'MERGE_CLIPS', ids, separator: '\n\n' });
+  if (res.success) {
+    selectedClips.clear();
+    await loadClips();
+    showToast('Clips merged!');
+  } else {
+    showToast(res.error, true);
+  }
+}
+
+// Workspaces
+async function switchWorkspace(id) {
+  activeWorkspace = id;
+  await chrome.runtime.sendMessage({ type: 'SET_ACTIVE_WORKSPACE', workspace: id });
+  renderWorkspaces();
+  await loadClips();
+}
+
+async function createWorkspace() {
+  const name = document.getElementById('workspaceName').value.trim();
+  if (!name) return;
   
-  filterBar.classList.toggle('active');
-  filterBtn.classList.toggle('active');
+  const res = await chrome.runtime.sendMessage({
+    type: 'CREATE_WORKSPACE',
+    workspace: { name, icon: selectedEmoji, color: '#5b3fd4' }
+  });
+  
+  if (res.success) {
+    workspaces.push(res.workspace);
+    renderWorkspaces();
+    document.getElementById('workspaceName').value = '';
+    closeModal('workspaceModal');
+    showToast('Workspace created!');
+  }
 }
 
-function handleSearch(e) {
-  searchQuery = e.target.value;
-  applyFilters();
+// Templates
+async function saveTemplate() {
+  const name = document.getElementById('templateName').value.trim();
+  const content = document.getElementById('templateContent').value.trim();
+  if (!name || !content) return;
+  
+  const res = await chrome.runtime.sendMessage({
+    type: 'SAVE_TEMPLATE',
+    template: { name, content }
+  });
+  
+  if (res.success) {
+    templates.push(res.template);
+    renderTemplates();
+    document.getElementById('templateName').value = '';
+    document.getElementById('templateContent').value = '';
+    showToast('Template saved!');
+  }
 }
 
-function handleFilterChange() {
-  filters.type = document.getElementById('typeFilter').value;
-  filters.category = document.getElementById('categoryFilter').value;
-  filters.date = document.getElementById('dateFilter').value;
-  applyFilters();
+window.deleteTemplate = async function(id, e) {
+  e.stopPropagation();
+  await chrome.runtime.sendMessage({ type: 'DELETE_TEMPLATE', id });
+  templates = templates.filter(t => t.id !== id);
+  renderTemplates();
+};
+
+async function useTemplate(id) {
+  const template = templates.find(t => t.id === id);
+  if (template) {
+    await navigator.clipboard.writeText(template.content);
+    showToast('Template copied!');
+    closeModal('templatesModal');
+  }
+}
+
+// UI
+function toggleSearch() {
+  const bar = document.getElementById('searchBar');
+  const btn = document.getElementById('searchBtn');
+  bar.classList.toggle('hidden');
+  btn.classList.toggle('active');
+  if (!bar.classList.contains('hidden')) {
+    document.getElementById('searchInput').focus();
+  } else {
+    searchQuery = '';
+    document.getElementById('searchInput').value = '';
+    renderClips();
+  }
 }
 
 function switchTab(tab) {
   currentTab = tab;
-  
-  document.querySelectorAll('.tab').forEach(t => {
-    t.classList.toggle('active', t.dataset.tab === tab);
-  });
-  
-  applyFilters();
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  loadClips();
 }
 
-function openSettings() {
-  chrome.runtime.openOptionsPage();
+function openModal(id) {
+  document.getElementById(id).classList.add('active');
 }
 
-// Category Modal
-let currentCategoryClipId = null;
+window.closeModal = function(id) {
+  document.getElementById(id).classList.remove('active');
+};
 
-function openCategoryModal(clipId) {
-  currentCategoryClipId = clipId;
-  const modal = document.getElementById('categoryModal');
-  const input = document.getElementById('categoryInput');
-  
-  const clip = allClips.find(c => c.id === clipId);
-  input.value = clip?.category || '';
-  
-  modal.classList.add('active');
-  input.focus();
-}
-
-function closeCategoryModal() {
-  document.getElementById('categoryModal').classList.remove('active');
-  currentCategoryClipId = null;
-}
-
-async function saveCategory() {
-  const category = document.getElementById('categoryInput').value.trim();
-  
-  if (currentCategoryClipId) {
-    const response = await chrome.runtime.sendMessage({
-      type: 'SET_CATEGORY',
-      id: currentCategoryClipId,
-      category: category || null
-    });
-    
-    if (response.success) {
-      const clip = allClips.find(c => c.id === currentCategoryClipId);
-      if (clip) {
-        clip.category = category || null;
-      }
-      await loadCategories();
-      applyFilters();
-      showToast(category ? 'Category set!' : 'Category removed');
-    }
-  }
-  
-  closeCategoryModal();
-}
-
-function showToast(message, isError = false) {
+function showToast(msg, error = false) {
   const toast = document.getElementById('toast');
-  toast.textContent = message;
-  toast.classList.toggle('error', isError);
+  toast.textContent = msg;
+  toast.classList.toggle('error', error);
   toast.classList.add('show');
-  
-  setTimeout(() => {
-    toast.classList.remove('show');
-  }, 2000);
+  setTimeout(() => toast.classList.remove('show'), 2000);
 }
 
-function formatTime(timestamp) {
-  const now = Date.now();
-  const diff = now - timestamp;
-  
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
+function handleKeyboard(e) {
+  if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+    e.preventDefault();
+    toggleSearch();
+  }
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+  }
+}
+
+function formatTime(ts) {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(mins / 60);
   const days = Math.floor(hours / 24);
   
-  if (seconds < 60) return 'Just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7) return `${days}d ago`;
-  
-  return new Date(timestamp).toLocaleDateString();
+  if (mins < 1) return 'Now';
+  if (mins < 60) return `${mins}m`;
+  if (hours < 24) return `${hours}h`;
+  if (days < 7) return `${days}d`;
+  return new Date(ts).toLocaleDateString();
 }
 
 function escapeHtml(text) {

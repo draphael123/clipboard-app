@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog - ClipStash</title>
+  <meta name="description" content="Latest updates and tips from the ClipStash team.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f14;
+      --bg-card: #17171c;
+      --text: #f0f0f5;
+      --text-secondary: #a0a0b8;
+      --text-muted: #6a6a80;
+      --accent: #5b3fd4;
+      --border: rgba(255, 255, 255, 0.08);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+    .container { max-width: 900px; margin: 0 auto; padding: 60px 24px; }
+    .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--accent); text-decoration: none; font-size: 14px; margin-bottom: 32px; }
+    h1 { font-size: 42px; font-weight: 700; margin-bottom: 16px; }
+    .subtitle { color: var(--text-muted); font-size: 18px; margin-bottom: 48px; }
+    
+    .posts { display: grid; gap: 24px; }
+    
+    .post {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .post:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+    
+    .post-image {
+      height: 200px;
+      background: linear-gradient(135deg, var(--accent), #7c5cff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 64px;
+    }
+    
+    .post-content { padding: 24px; }
+    .post-meta { display: flex; gap: 16px; margin-bottom: 12px; font-size: 13px; color: var(--text-muted); }
+    .post-title { font-size: 22px; font-weight: 600; margin-bottom: 12px; }
+    .post-excerpt { color: var(--text-secondary); margin-bottom: 16px; }
+    .post-link { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .post-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back to ClipStash
+    </a>
+    
+    <h1>Blog</h1>
+    <p class="subtitle">Updates, tips, and behind-the-scenes</p>
+    
+    <div class="posts">
+      <article class="post">
+        <div class="post-image">🚀</div>
+        <div class="post-content">
+          <div class="post-meta">
+            <span>January 17, 2026</span>
+            <span>•</span>
+            <span>Release</span>
+          </div>
+          <h2 class="post-title">Introducing ClipStash 2.0</h2>
+          <p class="post-excerpt">The biggest update yet! Image clipboard, workspaces, templates, clip editing, and so much more. Here's everything that's new.</p>
+          <a href="#" class="post-link">Read more →</a>
+        </div>
+      </article>
+      
+      <article class="post">
+        <div class="post-image">💡</div>
+        <div class="post-content">
+          <div class="post-meta">
+            <span>January 15, 2026</span>
+            <span>•</span>
+            <span>Tips</span>
+          </div>
+          <h2 class="post-title">10 Keyboard Shortcuts Every Power User Needs</h2>
+          <p class="post-excerpt">Boost your productivity with these essential ClipStash shortcuts. From quick copying to workspace switching.</p>
+          <a href="#" class="post-link">Read more →</a>
+        </div>
+      </article>
+      
+      <article class="post">
+        <div class="post-image">🔒</div>
+        <div class="post-content">
+          <div class="post-meta">
+            <span>January 10, 2026</span>
+            <span>•</span>
+            <span>Privacy</span>
+          </div>
+          <h2 class="post-title">How We Keep Your Data Private</h2>
+          <p class="post-excerpt">A deep dive into our privacy-first architecture. Why we chose local-only storage and what it means for you.</p>
+          <a href="#" class="post-link">Read more →</a>
+        </div>
+      </article>
+      
+      <article class="post">
+        <div class="post-image">📋</div>
+        <div class="post-content">
+          <div class="post-meta">
+            <span>January 5, 2026</span>
+            <span>•</span>
+            <span>Launch</span>
+          </div>
+          <h2 class="post-title">Why We Built ClipStash</h2>
+          <p class="post-excerpt">The story behind ClipStash. How frustration with losing copied text led to building the clipboard manager we wanted.</p>
+          <a href="#" class="post-link">Read more →</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</body>
+</html>
+

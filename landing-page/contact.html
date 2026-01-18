@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact - ClipStash</title>
+  <meta name="description" content="Get in touch with the ClipStash team.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f14;
+      --bg-card: #17171c;
+      --bg-input: #1e1e25;
+      --text: #f0f0f5;
+      --text-secondary: #a0a0b8;
+      --text-muted: #6a6a80;
+      --accent: #5b3fd4;
+      --success: #059669;
+      --border: rgba(255, 255, 255, 0.08);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+    .container { max-width: 600px; margin: 0 auto; padding: 60px 24px; }
+    .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--accent); text-decoration: none; font-size: 14px; margin-bottom: 32px; }
+    h1 { font-size: 36px; font-weight: 700; margin-bottom: 16px; }
+    .subtitle { color: var(--text-muted); font-size: 16px; margin-bottom: 40px; }
+    
+    .contact-form {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+    }
+    
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      padding: 14px 16px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 15px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(91, 63, 212, 0.2);
+    }
+    
+    .form-group textarea { min-height: 150px; resize: vertical; }
+    
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+    
+    .submit-btn:hover {
+      background: #7c5cff;
+      transform: translateY(-2px);
+    }
+    
+    .success-message {
+      display: none;
+      padding: 20px;
+      background: rgba(5, 150, 105, 0.1);
+      border: 1px solid var(--success);
+      border-radius: 10px;
+      color: var(--success);
+      text-align: center;
+      margin-top: 20px;
+    }
+    
+    .success-message.show { display: block; }
+    
+    .other-ways {
+      margin-top: 40px;
+      text-align: center;
+    }
+    
+    .other-ways h3 {
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+    
+    .links {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+    }
+    
+    .links a {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    
+    .links a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-link">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Back to ClipStash
+    </a>
+    
+    <h1>Get in Touch</h1>
+    <p class="subtitle">Have feedback, questions, or just want to say hi? We'd love to hear from you.</p>
+    
+    <form class="contact-form" id="contactForm">
+      <div class="form-group">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" required placeholder="Your name">
+      </div>
+      
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required placeholder="you@example.com">
+      </div>
+      
+      <div class="form-group">
+        <label for="topic">Topic</label>
+        <select id="topic" name="topic" required>
+          <option value="">Select a topic...</option>
+          <option value="feedback">General Feedback</option>
+          <option value="bug">Bug Report</option>
+          <option value="feature">Feature Request</option>
+          <option value="support">Support</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label for="message">Message</label>
+        <textarea id="message" name="message" required placeholder="Tell us what's on your mind..."></textarea>
+      </div>
+      
+      <button type="submit" class="submit-btn">Send Message</button>
+      
+      <div class="success-message" id="successMessage">
+        ✓ Thanks for reaching out! We'll get back to you soon.
+      </div>
+    </form>
+    
+    <div class="other-ways">
+      <h3>Other ways to reach us</h3>
+      <div class="links">
+        <a href="https://github.com/draphael123/clipboard-app" target="_blank">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </a>
+        <a href="https://twitter.com" target="_blank">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          Twitter
+        </a>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    document.getElementById('contactForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      // In a real app, you'd send this to a backend
+      document.getElementById('successMessage').classList.add('show');
+      this.reset();
+      setTimeout(() => {
+        document.getElementById('successMessage').classList.remove('show');
+      }, 5000);
+    });
+  </script>
+</body>
+</html>
+
