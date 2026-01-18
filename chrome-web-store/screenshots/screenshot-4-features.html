@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Screenshot 4 - Features Overview</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 1280px;
+      height: 800px;
+      background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+    }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      padding: 40px;
+    }
+    
+    .feature-card {
+      background: rgba(15, 15, 20, 0.9);
+      border-radius: 16px;
+      padding: 28px;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+    }
+    
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #7c5cff 0%, #5c3cbf 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+    
+    .feature-title {
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .feature-desc {
+      color: #888;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    
+    .feature-preview {
+      margin-top: 16px;
+      background: #17171c;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 11px;
+    }
+    
+    .preview-code {
+      color: #7c5cff;
+    }
+    
+    .preview-url {
+      color: #3dd68c;
+    }
+    
+    .preview-text {
+      color: #e0e0e5;
+    }
+    
+    .type-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      background: rgba(124, 92, 255, 0.2);
+      border-radius: 4px;
+      font-size: 10px;
+      color: #7c5cff;
+      text-transform: uppercase;
+      margin-right: 6px;
+    }
+    
+    .type-badge.url { background: rgba(61, 214, 140, 0.2); color: #3dd68c; }
+    .type-badge.email { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+    
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    
+    .stat-item {
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 20px;
+      font-weight: 600;
+      color: #7c5cff;
+    }
+    
+    .stat-label {
+      font-size: 10px;
+      color: #666;
+      text-transform: uppercase;
+    }
+    
+    .workspace-tabs {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    .ws-tab {
+      padding: 6px 12px;
+      background: #0f0f14;
+      border-radius: 20px;
+      font-size: 11px;
+      color: #888;
+    }
+    
+    .ws-tab.active {
+      background: #7c5cff;
+      color: white;
+    }
+    
+    .label {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🎯</div>
+      <div class="feature-title">Smart Detection</div>
+      <div class="feature-desc">Automatically detects content type: code, URLs, emails, phone numbers, and more.</div>
+      <div class="feature-preview">
+        <span class="type-badge">code</span>
+        <span class="type-badge url">url</span>
+        <span class="type-badge email">email</span>
+      </div>
+    </div>
+    
+    <div class="feature-card">
+      <div class="feature-icon">📂</div>
+      <div class="feature-title">Workspaces</div>
+      <div class="feature-desc">Organize clips into workspaces for different projects or contexts.</div>
+      <div class="workspace-tabs">
+        <div class="ws-tab active">📋 Default</div>
+        <div class="ws-tab">💼 Work</div>
+        <div class="ws-tab">🏠 Personal</div>
+      </div>
+    </div>
+    
+    <div class="feature-card">
+      <div class="feature-icon">📊</div>
+      <div class="feature-title">Usage Stats</div>
+      <div class="feature-desc">Track your clipboard usage with detailed statistics.</div>
+      <div class="stat-row">
+        <div class="stat-item">
+          <div class="stat-value">247</div>
+          <div class="stat-label">Total Clips</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">89</div>
+          <div class="stat-label">Copies Today</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">12</div>
+          <div class="stat-label">Pinned</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="feature-card">
+      <div class="feature-icon">🔐</div>
+      <div class="feature-title">Privacy First</div>
+      <div class="feature-desc">All data stored locally. Sensitive content detection warns you about passwords & keys.</div>
+      <div class="feature-preview">
+        <div style="color: #ff6b6b;">⚠️ Contains sensitive data</div>
+      </div>
+    </div>
+    
+    <div class="feature-card">
+      <div class="feature-icon">📝</div>
+      <div class="feature-title">Templates</div>
+      <div class="feature-desc">Save frequently used text as templates for quick access.</div>
+      <div class="feature-preview">
+        <div class="preview-text">"Thanks for your email..."</div>
+        <div style="color: #666; font-size: 10px; margin-top: 4px;">→ Email reply template</div>
+      </div>
+    </div>
+    
+    <div class="feature-card">
+      <div class="feature-icon">✨</div>
+      <div class="feature-title">Edit & Merge</div>
+      <div class="feature-desc">Edit clips directly or merge multiple clips into one.</div>
+      <div class="feature-preview">
+        <div class="preview-text">Clip 1 + Clip 2 = Combined</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="label">✨ Packed with powerful features</div>
+</body>
+</html>
+

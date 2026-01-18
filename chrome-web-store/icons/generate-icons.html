@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ClipStash - Generate Store Icons</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a2e;
+      color: white;
+      padding: 40px;
+      min-height: 100vh;
+    }
+    
+    h1 { margin-bottom: 10px; }
+    p { color: #888; margin-bottom: 30px; }
+    
+    .icons-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+    
+    .icon-item {
+      text-align: center;
+    }
+    
+    .icon-item canvas {
+      display: block;
+      margin-bottom: 10px;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    
+    .icon-item span {
+      display: block;
+      font-size: 12px;
+      color: #888;
+    }
+    
+    .download-btn {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 6px 12px;
+      background: #7c5cff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    .download-btn:hover {
+      background: #6b4ce6;
+    }
+    
+    .section {
+      margin-bottom: 50px;
+    }
+    
+    h2 {
+      color: #7c5cff;
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+    
+    .promo-item canvas {
+      border-radius: 12px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+    }
+  </style>
+</head>
+<body>
+  <h1>🎨 ClipStash Store Assets Generator</h1>
+  <p>Right-click on any image and select "Save image as..." OR click the download buttons</p>
+  
+  <div class="section">
+    <h2>Store Icons (Required)</h2>
+    <div class="icons-grid">
+      <div class="icon-item">
+        <canvas id="icon128" width="128" height="128"></canvas>
+        <span>icon-128.png (Store Icon)</span>
+        <button class="download-btn" onclick="downloadCanvas('icon128', 'icon-128.png')">Download</button>
+      </div>
+      <div class="icon-item">
+        <canvas id="icon48" width="48" height="48"></canvas>
+        <span>icon-48.png</span>
+        <button class="download-btn" onclick="downloadCanvas('icon48', 'icon-48.png')">Download</button>
+      </div>
+      <div class="icon-item">
+        <canvas id="icon32" width="32" height="32"></canvas>
+        <span>icon-32.png</span>
+        <button class="download-btn" onclick="downloadCanvas('icon32', 'icon-32.png')">Download</button>
+      </div>
+      <div class="icon-item">
+        <canvas id="icon16" width="16" height="16"></canvas>
+        <span>icon-16.png</span>
+        <button class="download-btn" onclick="downloadCanvas('icon16', 'icon-16.png')">Download</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="section">
+    <h2>Promotional Images</h2>
+    <div class="icons-grid">
+      <div class="icon-item promo-item">
+        <canvas id="promo440" width="440" height="280"></canvas>
+        <span>promo-small-440x280.png</span>
+        <button class="download-btn" onclick="downloadCanvas('promo440', 'promo-small-440x280.png')">Download</button>
+      </div>
+      <div class="icon-item promo-item">
+        <canvas id="promo1400" width="1400" height="560"></canvas>
+        <span>promo-marquee-1400x560.png (Optional)</span>
+        <button class="download-btn" onclick="downloadCanvas('promo1400', 'promo-marquee-1400x560.png')">Download</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Draw icon at specified size
+    function drawIcon(canvas) {
+      const ctx = canvas.getContext('2d');
+      const size = canvas.width;
+      const scale = size / 128;
+      
+      // Clear
+      ctx.clearRect(0, 0, size, size);
+      
+      // Background gradient
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#7c5cff');
+      gradient.addColorStop(1, '#5c3cbf');
+      
+      // Rounded rectangle background
+      const radius = 24 * scale;
+      ctx.beginPath();
+      ctx.moveTo(radius, 0);
+      ctx.lineTo(size - radius, 0);
+      ctx.quadraticCurveTo(size, 0, size, radius);
+      ctx.lineTo(size, size - radius);
+      ctx.quadraticCurveTo(size, size, size - radius, size);
+      ctx.lineTo(radius, size);
+      ctx.quadraticCurveTo(0, size, 0, size - radius);
+      ctx.lineTo(0, radius);
+      ctx.quadraticCurveTo(0, 0, radius, 0);
+      ctx.closePath();
+      ctx.fillStyle = gradient;
+      ctx.fill();
+      
+      // Draw clipboard icon
+      ctx.strokeStyle = 'white';
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
+      ctx.lineWidth = 4 * scale;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      
+      // Back clipboard
+      const bx = 28 * scale, by = 24 * scale, bw = 48 * scale, bh = 64 * scale, br = 8 * scale;
+      ctx.beginPath();
+      ctx.moveTo(bx + br, by);
+      ctx.lineTo(bx + bw - br, by);
+      ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + br);
+      ctx.lineTo(bx + bw, by + bh - br);
+      ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - br, by + bh);
+      ctx.lineTo(bx + br, by + bh);
+      ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - br);
+      ctx.lineTo(bx, by + br);
+      ctx.quadraticCurveTo(bx, by, bx + br, by);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      
+      // Front clipboard
+      const fx = 52 * scale, fy = 40 * scale, fw = 48 * scale, fh = 64 * scale, fr = 8 * scale;
+      ctx.fillStyle = 'white';
+      ctx.beginPath();
+      ctx.moveTo(fx + fr, fy);
+      ctx.lineTo(fx + fw - fr, fy);
+      ctx.quadraticCurveTo(fx + fw, fy, fx + fw, fy + fr);
+      ctx.lineTo(fx + fw, fy + fh - fr);
+      ctx.quadraticCurveTo(fx + fw, fy + fh, fx + fw - fr, fy + fh);
+      ctx.lineTo(fx + fr, fy + fh);
+      ctx.quadraticCurveTo(fx, fy + fh, fx, fy + fh - fr);
+      ctx.lineTo(fx, fy + fr);
+      ctx.quadraticCurveTo(fx, fy, fx + fr, fy);
+      ctx.closePath();
+      ctx.fill();
+      
+      // Lines on front clipboard
+      ctx.strokeStyle = '#7c5cff';
+      ctx.lineWidth = 3 * scale;
+      ctx.beginPath();
+      ctx.moveTo(fx + 10 * scale, fy + 20 * scale);
+      ctx.lineTo(fx + fw - 10 * scale, fy + 20 * scale);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(fx + 10 * scale, fy + 32 * scale);
+      ctx.lineTo(fx + fw - 18 * scale, fy + 32 * scale);
+      ctx.stroke();
+      
+      ctx.beginPath();
+      ctx.moveTo(fx + 10 * scale, fy + 44 * scale);
+      ctx.lineTo(fx + fw - 14 * scale, fy + 44 * scale);
+      ctx.stroke();
+    }
+    
+    // Draw promo image
+    function drawPromo(canvas) {
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      
+      // Background
+      const gradient = ctx.createLinearGradient(0, 0, w, h);
+      gradient.addColorStop(0, '#1a1a2e');
+      gradient.addColorStop(0.5, '#16213e');
+      gradient.addColorStop(1, '#0f3460');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, w, h);
+      
+      // Decorative circles
+      ctx.fillStyle = 'rgba(124, 92, 255, 0.1)';
+      ctx.beginPath();
+      ctx.arc(w * 0.1, h * 0.8, w * 0.15, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = 'rgba(124, 92, 255, 0.08)';
+      ctx.beginPath();
+      ctx.arc(w * 0.85, h * 0.2, w * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // Draw icon in center-left
+      const iconSize = h * 0.4;
+      const iconX = w * 0.15;
+      const iconY = (h - iconSize) / 2;
+      
+      // Icon background
+      const iconGradient = ctx.createLinearGradient(iconX, iconY, iconX + iconSize, iconY + iconSize);
+      iconGradient.addColorStop(0, '#7c5cff');
+      iconGradient.addColorStop(1, '#5c3cbf');
+      
+      const radius = iconSize * 0.18;
+      ctx.beginPath();
+      ctx.moveTo(iconX + radius, iconY);
+      ctx.lineTo(iconX + iconSize - radius, iconY);
+      ctx.quadraticCurveTo(iconX + iconSize, iconY, iconX + iconSize, iconY + radius);
+      ctx.lineTo(iconX + iconSize, iconY + iconSize - radius);
+      ctx.quadraticCurveTo(iconX + iconSize, iconY + iconSize, iconX + iconSize - radius, iconY + iconSize);
+      ctx.lineTo(iconX + radius, iconY + iconSize);
+      ctx.quadraticCurveTo(iconX, iconY + iconSize, iconX, iconY + iconSize - radius);
+      ctx.lineTo(iconX, iconY + radius);
+      ctx.quadraticCurveTo(iconX, iconY, iconX + radius, iconY);
+      ctx.closePath();
+      ctx.fillStyle = iconGradient;
+      ctx.fill();
+      
+      // Simple clipboard symbol
+      ctx.fillStyle = 'white';
+      ctx.fillRect(iconX + iconSize * 0.25, iconY + iconSize * 0.2, iconSize * 0.5, iconSize * 0.6);
+      
+      ctx.fillStyle = '#7c5cff';
+      ctx.fillRect(iconX + iconSize * 0.32, iconY + iconSize * 0.35, iconSize * 0.36, iconSize * 0.06);
+      ctx.fillRect(iconX + iconSize * 0.32, iconY + iconSize * 0.48, iconSize * 0.28, iconSize * 0.06);
+      ctx.fillRect(iconX + iconSize * 0.32, iconY + iconSize * 0.61, iconSize * 0.32, iconSize * 0.06);
+      
+      // Text
+      ctx.fillStyle = 'white';
+      ctx.font = `bold ${h * 0.14}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+      ctx.fillText('ClipStash', w * 0.42, h * 0.45);
+      
+      ctx.fillStyle = '#888';
+      ctx.font = `${h * 0.065}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+      ctx.fillText('Your clipboard history, always within reach', w * 0.42, h * 0.58);
+      
+      // Feature badges
+      const badges = ['📋 Unlimited History', '🔍 Smart Search', '⌨️ Keyboard Shortcuts'];
+      ctx.font = `${h * 0.05}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+      badges.forEach((badge, i) => {
+        ctx.fillStyle = 'rgba(124, 92, 255, 0.2)';
+        const bx = w * 0.42 + i * (w * 0.18);
+        const by = h * 0.68;
+        const bw = w * 0.16;
+        const bh = h * 0.1;
+        const br = 8;
+        
+        ctx.beginPath();
+        ctx.roundRect(bx, by, bw, bh, br);
+        ctx.fill();
+        
+        ctx.fillStyle = '#e0e0e5';
+        ctx.fillText(badge, bx + 10, by + bh * 0.65);
+      });
+    }
+    
+    // Download canvas as PNG
+    function downloadCanvas(canvasId, filename) {
+      const canvas = document.getElementById(canvasId);
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+    
+    // Initialize
+    window.onload = function() {
+      // Draw all icons
+      ['icon128', 'icon48', 'icon32', 'icon16'].forEach(id => {
+        drawIcon(document.getElementById(id));
+      });
+      
+      // Draw promo images
+      drawPromo(document.getElementById('promo440'));
+      drawPromo(document.getElementById('promo1400'));
+    };
+  </script>
+</body>
+</html>
+

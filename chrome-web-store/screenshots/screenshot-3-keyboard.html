@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Screenshot 3 - Keyboard Shortcuts</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 1280px;
+      height: 800px;
+      background: linear-gradient(135deg, #2d1b4e 0%, #1a1a2e 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+    }
+    
+    .container {
+      display: flex;
+      gap: 40px;
+      align-items: center;
+    }
+    
+    .popup {
+      width: 380px;
+      background: #0f0f14;
+      color: #f0f0f5;
+      font-size: 13px;
+      border-radius: 12px;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+      overflow: hidden;
+    }
+    
+    .popup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+    
+    .logo svg { color: #7c5cff; }
+    
+    .clips {
+      padding: 10px;
+    }
+    
+    .clip {
+      padding: 12px;
+      background: #17171c;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .clip.selected {
+      border-color: #7c5cff;
+      background: rgba(124, 92, 255, 0.15);
+    }
+    
+    .clip-content {
+      font-size: 12px;
+      line-height: 1.4;
+      color: #e0e0e5;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    .kbd {
+      padding: 4px 8px;
+      background: #0f0f14;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 4px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 11px;
+      color: #7c5cff;
+      margin-left: 12px;
+    }
+    
+    .shortcuts-panel {
+      background: rgba(15, 15, 20, 0.95);
+      border-radius: 16px;
+      padding: 32px;
+      width: 350px;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .shortcuts-title {
+      color: white;
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .shortcut-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    
+    .shortcut-row:last-child {
+      border-bottom: none;
+    }
+    
+    .shortcut-label {
+      color: #b0b0b5;
+      font-size: 13px;
+    }
+    
+    .shortcut-keys {
+      display: flex;
+      gap: 4px;
+    }
+    
+    .key {
+      padding: 6px 10px;
+      background: linear-gradient(135deg, #2a2a35 0%, #1e1e25 100%);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 6px;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 12px;
+      color: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .key.highlight {
+      background: linear-gradient(135deg, #7c5cff 0%, #5c3cbf 100%);
+      border-color: #7c5cff;
+    }
+    
+    .label {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="popup">
+      <div class="popup-header">
+        <div class="logo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <rect x="4" y="2" width="12" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+            <rect x="8" y="6" width="12" height="16" rx="2" fill="currentColor" opacity="0.3" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          ClipStash
+        </div>
+      </div>
+      
+      <div class="clips">
+        <div class="clip selected">
+          <div class="clip-content">const api = axios.create({ baseURL })</div>
+          <span class="kbd">Alt+1</span>
+        </div>
+        
+        <div class="clip">
+          <div class="clip-content">https://github.com/project/repo</div>
+          <span class="kbd">Alt+2</span>
+        </div>
+        
+        <div class="clip">
+          <div class="clip-content">Meeting at 3pm - Conference room B</div>
+          <span class="kbd">Alt+3</span>
+        </div>
+        
+        <div class="clip">
+          <div class="clip-content">hello@example.com</div>
+          <span class="kbd">Alt+4</span>
+        </div>
+        
+        <div class="clip">
+          <div class="clip-content">npm install @clipstash/core</div>
+          <span class="kbd">Alt+5</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="shortcuts-panel">
+      <div class="shortcuts-title">⌨️ Keyboard Shortcuts</div>
+      
+      <div class="shortcut-row">
+        <span class="shortcut-label">Open ClipStash</span>
+        <div class="shortcut-keys">
+          <span class="key highlight">Ctrl</span>
+          <span class="key highlight">Shift</span>
+          <span class="key highlight">V</span>
+        </div>
+      </div>
+      
+      <div class="shortcut-row">
+        <span class="shortcut-label">Quick paste clip</span>
+        <div class="shortcut-keys">
+          <span class="key">Alt</span>
+          <span class="key">1-9</span>
+        </div>
+      </div>
+      
+      <div class="shortcut-row">
+        <span class="shortcut-label">Navigate clips</span>
+        <div class="shortcut-keys">
+          <span class="key">↑</span>
+          <span class="key">↓</span>
+        </div>
+      </div>
+      
+      <div class="shortcut-row">
+        <span class="shortcut-label">Copy selected</span>
+        <div class="shortcut-keys">
+          <span class="key">Enter</span>
+        </div>
+      </div>
+      
+      <div class="shortcut-row">
+        <span class="shortcut-label">Search clips</span>
+        <div class="shortcut-keys">
+          <span class="key">/</span>
+        </div>
+      </div>
+      
+      <div class="shortcut-row">
+        <span class="shortcut-label">Pin/Unpin clip</span>
+        <div class="shortcut-keys">
+          <span class="key">P</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="label">⌨️ Powerful keyboard shortcuts</div>
+</body>
+</html>
+

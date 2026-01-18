@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Screenshot 1 - Main View</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 1280px;
+      height: 800px;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      overflow: hidden;
+    }
+    
+    .browser {
+      width: 900px;
+      background: #1e1e25;
+      border-radius: 12px;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.5);
+      overflow: hidden;
+    }
+    
+    .browser-bar {
+      height: 40px;
+      background: #2a2a35;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 8px;
+    }
+    
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot.red { background: #ff5f56; }
+    .dot.yellow { background: #ffbd2e; }
+    .dot.green { background: #27ca3f; }
+    
+    .browser-content {
+      display: flex;
+      height: 500px;
+    }
+    
+    .page-content {
+      flex: 1;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+      font-size: 14px;
+    }
+    
+    /* Extension Popup */
+    .popup {
+      width: 400px;
+      background: #0f0f14;
+      color: #f0f0f5;
+      font-size: 13px;
+      border-left: 1px solid #333;
+    }
+    
+    .popup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+    
+    .logo svg { color: #7c5cff; }
+    
+    .header-btns {
+      display: flex;
+      gap: 4px;
+    }
+    
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: #888;
+    }
+    
+    .workspaces {
+      display: flex;
+      gap: 6px;
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    
+    .ws-btn {
+      padding: 6px 14px;
+      background: #1e1e25;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      color: #888;
+      font-size: 12px;
+    }
+    
+    .ws-btn.active {
+      background: #7c5cff;
+      border-color: #7c5cff;
+      color: white;
+    }
+    
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    
+    .tab {
+      padding: 6px 14px;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      color: #888;
+      font-size: 12px;
+    }
+    
+    .tab.active {
+      background: rgba(124, 92, 255, 0.2);
+      color: #7c5cff;
+    }
+    
+    .clips {
+      padding: 10px;
+      height: 320px;
+      overflow: hidden;
+    }
+    
+    .clip {
+      padding: 12px;
+      background: #17171c;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .clip.pinned {
+      border-left: 2px solid #7c5cff;
+    }
+    
+    .clip-content {
+      font-size: 12px;
+      line-height: 1.5;
+      color: #e0e0e5;
+      margin-bottom: 8px;
+    }
+    
+    .clip-content.code {
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 11px;
+      background: #0f0f14;
+      padding: 8px;
+      border-radius: 4px;
+      color: #7c5cff;
+    }
+    
+    .clip-content.url {
+      color: #7c5cff;
+    }
+    
+    .clip-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    
+    .clip-info {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    
+    .clip-type {
+      padding: 2px 6px;
+      background: #0f0f14;
+      border-radius: 4px;
+      font-size: 10px;
+      text-transform: uppercase;
+      color: #666;
+    }
+    
+    .clip-type.code { color: #3dd68c; }
+    .clip-type.url { color: #7c5cff; }
+    
+    .clip-time {
+      font-size: 10px;
+      color: #555;
+    }
+    
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      background: #17171c;
+    }
+    
+    .footer span {
+      font-size: 11px;
+      color: #666;
+    }
+    
+    /* Floating label */
+    .label {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="browser">
+    <div class="browser-bar">
+      <div class="dot red"></div>
+      <div class="dot yellow"></div>
+      <div class="dot green"></div>
+    </div>
+    <div class="browser-content">
+      <div class="page-content">
+        Your webpage content here...
+      </div>
+      <div class="popup">
+        <div class="popup-header">
+          <div class="logo">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <rect x="4" y="2" width="12" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+              <rect x="8" y="6" width="12" height="16" rx="2" fill="currentColor" opacity="0.3" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            ClipStash
+          </div>
+          <div class="header-btns">
+            <div class="icon-btn">🔍</div>
+            <div class="icon-btn">⚙️</div>
+          </div>
+        </div>
+        
+        <div class="workspaces">
+          <div class="ws-btn active">📋 Default</div>
+          <div class="ws-btn">💼 Work</div>
+          <div class="ws-btn">💻 Code</div>
+        </div>
+        
+        <div class="tabs">
+          <div class="tab active">All</div>
+          <div class="tab">📌 Pinned</div>
+          <div class="tab">🖼️ Images</div>
+        </div>
+        
+        <div class="clips">
+          <div class="clip pinned">
+            <div class="clip-content code">const handleSubmit = async (data) => {
+  await api.post('/users', data);
+}</div>
+            <div class="clip-meta">
+              <div class="clip-info">
+                <span class="clip-type code">code</span>
+                <span class="clip-time">2m ago</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="clip">
+            <div class="clip-content url">https://github.com/clipstash/extension</div>
+            <div class="clip-meta">
+              <div class="clip-info">
+                <span class="clip-type url">url</span>
+                <span class="clip-time">15m ago</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="clip">
+            <div class="clip-content">Meeting notes: Q1 product roadmap review with design team. Action items include...</div>
+            <div class="clip-meta">
+              <div class="clip-info">
+                <span class="clip-type">text</span>
+                <span class="clip-time">1h ago</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="clip">
+            <div class="clip-content">hello@clipstash.app</div>
+            <div class="clip-meta">
+              <div class="clip-info">
+                <span class="clip-type">email</span>
+                <span class="clip-time">3h ago</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="footer">
+          <span>12 clips</span>
+          <span>Ctrl+Shift+V to open</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="label">📋 Save everything you copy</div>
+</body>
+</html>
+
