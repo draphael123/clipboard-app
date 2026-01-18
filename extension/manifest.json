@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ClipStash",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "Your clipboard history, always within reach. Never lose copied text again.",
   "permissions": [
     "storage",
@@ -22,8 +22,10 @@
     {
       "matches": ["http://*/*", "https://*/*", "file:///*"],
       "js": ["content.js"],
-      "run_at": "document_idle",
-      "all_frames": true
+      "run_at": "document_start",
+      "all_frames": true,
+      "match_about_blank": true,
+      "match_origin_as_fallback": true
     }
   ],
   "action": {
